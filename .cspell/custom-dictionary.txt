@@ -1,0 +1,7 @@
+# Custom Dictionary Words
+APPL
+Buzzvil
+dotenv
+gradlew
+shellcheck
+shfmt
