@@ -35,7 +35,7 @@ class BuzzvilModule(reactContext: ReactApplicationContext) :
       gender = when (gender) {
         "MALE" -> BuzzvilSdkUser.Gender.MALE
         "FEMALE" -> BuzzvilSdkUser.Gender.FEMALE
-        else -> null
+        else -> BuzzvilSdkUser.Gender.UNKNOWN // sentinel "" → unspecified
       },
       birthYear = if (birthYear > 0) birthYear.toInt() else null,
     )
