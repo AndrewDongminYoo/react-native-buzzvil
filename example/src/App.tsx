@@ -1,12 +1,18 @@
-import { Text, View, StyleSheet } from 'react-native';
-import { multiply } from '@dongminyu/react-native-buzzvil';
+import { useEffect } from 'react';
+import { Button, StyleSheet, View } from 'react-native';
+import { initialize, showBenefitHub } from '@dongminyu/react-native-buzzvil';
 
-const result = multiply(3, 7);
+// Replace with your Buzzvil app id (from help@buzzvil.com).
+const BUZZVIL_APP_ID = 'YOUR_APP_ID';
 
 export default function App() {
+  useEffect(() => {
+    initialize(BUZZVIL_APP_ID);
+  }, []);
+
   return (
     <View style={styles.container}>
-      <Text>Result: {result}</Text>
+      <Button title="Open BenefitHub" onPress={() => showBenefitHub()} />
     </View>
   );
 }
