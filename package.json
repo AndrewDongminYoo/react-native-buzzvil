@@ -1,5 +1,5 @@
 {
-  "name": "react-native-buzzvil",
+  "name": "@dongminyu/react-native-buzzvil",
   "version": "0.1.0",
   "description": "Get started with effective app monetization using the integration guide and API reference provided by Buzzvil, the No. 1 mobile app rewards advertising platform.",
   "main": "./lib/module/index.js",
@@ -57,6 +57,7 @@
   },
   "homepage": "https://github.com/AndrewDongminYoo/react-native-buzzvil#readme",
   "publishConfig": {
+    "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {

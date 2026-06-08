@@ -6,7 +6,7 @@ Get started with effective app monetization using the integration guide and API 
 
 
 ```sh
-npm install react-native-buzzvil
+npm install @dongminyu/react-native-buzzvil
 ```
 
 
@@ -14,7 +14,7 @@ npm install react-native-buzzvil
 
 
 ```js
-import { multiply } from 'react-native-buzzvil';
+import { multiply } from '@dongminyu/react-native-buzzvil';
 
 // ...
 

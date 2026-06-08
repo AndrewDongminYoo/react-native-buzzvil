@@ -1,5 +1,5 @@
 import { Text, View, StyleSheet } from 'react-native';
-import { multiply } from 'react-native-buzzvil';
+import { multiply } from '@dongminyu/react-native-buzzvil';
 
 const result = multiply(3, 7);
 
