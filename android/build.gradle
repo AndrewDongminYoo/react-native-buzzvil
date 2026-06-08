@@ -17,6 +17,8 @@ buildscript {
   repositories {
     google()
     mavenCentral()
+    gradlePluginPortal()
+    maven { url "https://dl.buzzvil.com/public/maven" }
   }
 
   dependencies {
@@ -64,4 +66,11 @@ android {
 
 dependencies {
   implementation "com.facebook.react:react-android"
+
+  // Buzzvil BuzzBenefit v6 SDK. The buzzvil-bom pins versions for buzzvil-sdk
+  // and its sub-modules. The Maven repo (dl.buzzvil.com/public/maven) is
+  // declared in the consumer's settings.gradle, not here — RNGP runs in
+  // FAIL_ON_PROJECT_REPOS mode, which rejects module-level repositories {}.
+  api platform("com.buzzvil:buzzvil-bom:6.7.+")
+  implementation "com.buzzvil:buzzvil-sdk"
 }

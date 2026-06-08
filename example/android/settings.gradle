@@ -4,3 +4,18 @@ extensions.configure(com.facebook.react.ReactSettingsExtension){ ex -> ex.autoli
 rootProject.name = 'buzzvil.example'
 include ':app'
 includeBuild('../node_modules/@react-native/gradle-plugin')
+
+// Use PREFER_SETTINGS so every dependency repo is declared here, in one place.
+// This ignores (without failing on) the project-level repos the React Native
+// Gradle Plugin adds to :app and to library modules — FAIL_ON_PROJECT_REPOS
+// errors on them, and the default PREFER_PROJECT lets those repos shadow the
+// Buzzvil one so com.buzzvil artifacts aren't found. RN itself resolves from
+// mavenCentral. Real consumers add the buzzvil maven line to their settings.gradle.
+dependencyResolutionManagement {
+  repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+  repositories {
+    google()
+    mavenCentral()
+    maven { url("https://dl.buzzvil.com/public/maven") }
+  }
+}
