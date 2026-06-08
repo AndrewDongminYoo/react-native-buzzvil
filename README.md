@@ -11,11 +11,26 @@ npm install @dongminyu/react-native-buzzvil
 ## Usage
 
 ```js
-import { multiply } from '@dongminyu/react-native-buzzvil';
+import {
+  initialize,
+  login,
+  logout,
+  isLoggedIn,
+  showBenefitHub,
+} from '@dongminyu/react-native-buzzvil';
 
-// ...
+// Call once at app startup, before any other method:
+initialize('YOUR_BUZZVIL_APP_ID');
 
-const result = multiply(3, 7);
+// Log a user in (gender / birthYear are optional):
+await login({ userId: 'user-123', gender: 'MALE', birthYear: 1990 });
+
+// Present the BenefitHub (offerwall):
+showBenefitHub();
+
+// Session helpers:
+const loggedIn = await isLoggedIn();
+logout();
 ```
 
 ## Contributing
