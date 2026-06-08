@@ -1,61 +1,14 @@
 PODS:
-  - AdPopcornSSP (2.9.10)
-  - AFNetworking (4.0.1):
-    - AFNetworking/NSURLSession (= 4.0.1)
-    - AFNetworking/Reachability (= 4.0.1)
-    - AFNetworking/Security (= 4.0.1)
-    - AFNetworking/Serialization (= 4.0.1)
-    - AFNetworking/UIKit (= 4.0.1)
-  - AFNetworking/NSURLSession (4.0.1):
-    - AFNetworking/Reachability
-    - AFNetworking/Security
-    - AFNetworking/Serialization
-  - AFNetworking/Reachability (4.0.1)
-  - AFNetworking/Security (4.0.1)
-  - AFNetworking/Serialization (4.0.1)
-  - AFNetworking/UIKit (4.0.1):
-    - AFNetworking/NSURLSession
-  - AvatyeAdCash (3.1.19):
-    - AdPopcornSSP (~> 2.9.0)
-  - BuzzAdBenefit (3.45.15):
-    - BuzzAdBenefit/Default (= 3.45.15)
-    - BuzzAdBenefitBase (~> 3.45.15)
-    - BuzzAdBenefitFeed (~> 3.45.15)
-    - BuzzAdBenefitInterstitial (~> 3.45.15)
-    - BuzzAdBenefitNative (~> 3.45.15)
-  - BuzzAdBenefit/Default (3.45.15):
-    - BuzzAdBenefitBase (~> 3.45.15)
-    - BuzzAdBenefitFeed (~> 3.45.15)
-    - BuzzAdBenefitInterstitial (~> 3.45.15)
-    - BuzzAdBenefitNative (~> 3.45.15)
-    - BuzzAvatyeAdCash (~> 3.45.15)
-  - BuzzAdBenefitBase (3.45.15):
-    - AFNetworking (~> 4.0)
-    - BuzzRxSwift (~> 7.0.0)
-    - ReactiveObjC (~> 3.1.1)
-    - SDWebImage (~> 5.19)
-    - SDWebImageWebPCoder
-  - BuzzAdBenefitFeed (3.45.15):
-    - BuzzAdBenefitBase (~> 3.45.15)
-    - BuzzAdBenefitInterstitial (~> 3.45.15)
-    - BuzzAdBenefitNative (~> 3.45.15)
-    - BuzzRxSwift (~> 7.0.0)
-    - ReactiveObjC (~> 3.1.1)
-  - BuzzAdBenefitInterstitial (3.45.15):
-    - BuzzAdBenefitBase (~> 3.45.15)
-    - BuzzAdBenefitNative (~> 3.45.15)
-    - BuzzRxSwift (~> 7.0.0)
-  - BuzzAdBenefitNative (3.45.15):
-    - BuzzAdBenefitBase (~> 3.45.15)
-    - BuzzRxSwift (~> 7.0.0)
-    - ReactiveObjC (~> 3.1.1)
-  - BuzzAvatyeAdCash (3.45.15):
-    - AvatyeAdCash (= 3.1.19)
-    - BuzzAdBenefitBase (~> 3.45.15)
-    - BuzzRxSwift (~> 7.0.0)
-  - BuzzRxSwift (7.0.0)
+  - AdPopcornSSP (2.11.9)
+  - AvatyeAdCash (3.4.2):
+    - AdPopcornSSP (~> 2.11.1)
+  - BuzzAdBenefitSDK (6.7.5)
+  - BuzzAvatyeAdCash (6.7.5):
+    - AvatyeAdCash (~> 3.4.2)
+    - BuzzAdBenefitSDK (= 6.7.5)
   - Buzzvil (0.1.0):
-    - BuzzAdBenefit
+    - BuzzAdBenefitSDK (~> 6.7.5)
+    - BuzzvilSDK (~> 6.7.5)
     - hermes-engine
     - RCTRequired
     - RCTTypeSafety
@@ -77,22 +30,16 @@ PODS:
     - ReactCommon/turbomodule/core
     - ReactNativeDependencies
     - Yoga
+  - BuzzvilSDK (6.7.5):
+    - BuzzAdBenefitSDK (= 6.7.5)
+    - BuzzvilSDK/Default (= 6.7.5)
+  - BuzzvilSDK/Default (6.7.5):
+    - BuzzAdBenefitSDK (= 6.7.5)
+    - BuzzAvatyeAdCash (= 6.7.5)
   - FBLazyVector (0.85.0)
   - hermes-engine (250829098.0.10):
     - hermes-engine/Pre-built (= 250829098.0.10)
   - hermes-engine/Pre-built (250829098.0.10)
-  - libwebp (1.5.0):
-    - libwebp/demux (= 1.5.0)
-    - libwebp/mux (= 1.5.0)
-    - libwebp/sharpyuv (= 1.5.0)
-    - libwebp/webp (= 1.5.0)
-  - libwebp/demux (1.5.0):
-    - libwebp/webp
-  - libwebp/mux (1.5.0):
-    - libwebp/demux
-  - libwebp/sharpyuv (1.5.0)
-  - libwebp/webp (1.5.0):
-    - libwebp/sharpyuv
   - RCTDeprecation (0.85.0)
   - RCTRequired (0.85.0)
   - RCTSwiftUI (0.85.0)
@@ -1836,14 +1783,7 @@ PODS:
     - React-perflogger (= 0.85.0)
     - React-utils (= 0.85.0)
     - ReactNativeDependencies
-  - ReactiveObjC (3.1.1)
   - ReactNativeDependencies (0.85.0)
-  - SDWebImage (5.21.7):
-    - SDWebImage/Core (= 5.21.7)
-  - SDWebImage/Core (5.21.7)
-  - SDWebImageWebPCoder (0.15.0):
-    - libwebp (~> 1.0)
-    - SDWebImage/Core (~> 5.17)
   - Yoga (0.0.0)
 
 DEPENDENCIES:
@@ -1926,19 +1866,10 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - AdPopcornSSP
-    - AFNetworking
     - AvatyeAdCash
-    - BuzzAdBenefit
-    - BuzzAdBenefitBase
-    - BuzzAdBenefitFeed
-    - BuzzAdBenefitInterstitial
-    - BuzzAdBenefitNative
+    - BuzzAdBenefitSDK
     - BuzzAvatyeAdCash
-    - BuzzRxSwift
-    - libwebp
-    - ReactiveObjC
-    - SDWebImage
-    - SDWebImageWebPCoder
+    - BuzzvilSDK
 
 EXTERNAL SOURCES:
   Buzzvil:
@@ -2092,20 +2023,14 @@ EXTERNAL SOURCES:
     :path: "../node_modules/react-native/ReactCommon/yoga"
 
 SPEC CHECKSUMS:
-  AdPopcornSSP: 3114b7011a28877c159c50e1ae7016b54e4e9500
-  AFNetworking: 3bd23d814e976cd148d7d44c3ab78017b744cd58
-  AvatyeAdCash: b019863158bbfc44d7cba640bf7e914d6be5edcf
-  BuzzAdBenefit: 1befe12fcf19c3b247a6ec4fcc009d99328441ad
-  BuzzAdBenefitBase: 74565d8fcd373f960cf180f1fba571912480c14a
-  BuzzAdBenefitFeed: a1cfff080ad954a9f4ce010c5cf538f7a0cbf947
-  BuzzAdBenefitInterstitial: c877f4fd2c59bf0a6f7d84ec443a5fdbc1360783
-  BuzzAdBenefitNative: ccf4b2c3755c40c6ae552d4635a22366a1944ea3
-  BuzzAvatyeAdCash: 695212b5012b003bc65b9ee25a095897bce75707
-  BuzzRxSwift: 8d04c2083985af36f1e28a9a4db45675c6816c34
-  Buzzvil: cf2cd1588c5c994c7a54dd2a9506480cd43d668a
+  AdPopcornSSP: aca347b5f575b3e7d06b76b18be43251d3f21e30
+  AvatyeAdCash: feee179adf2811beb35e0917d8eef6efd59b08a6
+  BuzzAdBenefitSDK: cf78c31eabc8ef58625d7bb5d1418cde0211fdb4
+  BuzzAvatyeAdCash: 683a6f972f631a9c8ace026206e0a2e7580b5616
+  Buzzvil: de4ef7c99642070bffb115883aec29b094e90a58
+  BuzzvilSDK: 559b0a1b645a75cf2d03fe60fa4379aa66e4f300
   FBLazyVector: c00c20551d40126351a6783c47ce75f5b374851b
   hermes-engine: 6439af91722c8e16f63de5143223376e291eb4be
-  libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   RCTDeprecation: 3bb167081b134461cfeb875ff7ae1945f8635257
   RCTRequired: 74839f55d5058a133a0bc4569b0afec750957f64
   RCTSwiftUI: 87a316382f3eab4dd13d2a0d0fd2adcce917361a
@@ -2175,10 +2100,7 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 5787b37b8e2e51dfeab697ec031cc7c4080dcea2
   ReactCodegen: b3184a229afd01e7f8058dd81b805b843caa2bf9
   ReactCommon: fe2a3af8975e63efa60f95fca8c34dc85deee360
-  ReactiveObjC: 011caa393aa0383245f2dcf9bf02e86b80b36040
   ReactNativeDependencies: 547985cda5fad7c135d322828c835e116481189f
-  SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
-  SDWebImageWebPCoder: 0e06e365080397465cc73a7a9b472d8a3bd0f377
   Yoga: e83c3121d079541e69f3c5c623faaaf933fb5812
 
 PODFILE CHECKSUM: 1dd657c052a0f55fbc1c6759277470adfdef54c0

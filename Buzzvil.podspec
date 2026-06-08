@@ -16,7 +16,11 @@ Pod::Spec.new do |s|
   s.source_files = "ios/**/*.{h,m,mm,swift,cpp}"
   s.private_header_files = "ios/**/*.h"
 
-  s.dependency   "BuzzAdBenefit"
+  s.dependency   "BuzzvilSDK", "~> 6.7.5"
+  # Buzzvil.mm imports <BuzzAdBenefitSDK/BuzzAdBenefitSDK-Swift.h> directly for
+  # BuzzBenefitHub, so declare it explicitly rather than relying on transitive
+  # header reachability.
+  s.dependency   "BuzzAdBenefitSDK", "~> 6.7.5"
 
   install_modules_dependencies(s)
 end
