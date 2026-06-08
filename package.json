@@ -87,6 +87,14 @@
     "react": "*",
     "react-native": "*"
   },
+  "resolutions": {
+    "jest": "30.4.1",
+    "jest-cli": "30.4.1",
+    "@jest/core": "30.4.1",
+    "jest-runtime": "30.4.1",
+    "jest-mock": "30.4.1",
+    "jest-environment-node": "30.4.1"
+  },
   "workspaces": [
     "example"
   ],
