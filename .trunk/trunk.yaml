@@ -15,7 +15,7 @@ lint:
   disabled:
     - dotenv-linter
   ignore:
-    - linters: [shellcheck]
+    - linters: [shellcheck, shfmt]
       paths: [example/android/gradlew]
     - linters: [trufflehog]
       paths: [.yarn/releases/yarn-4.11.0.cjs, yarn.lock]
