@@ -4,14 +4,11 @@ Get started with effective app monetization using the integration guide and API 
 
 ## Installation
 
-
 ```sh
 npm install @dongminyu/react-native-buzzvil
 ```
 
-
 ## Usage
-
 
 ```js
 import { multiply } from '@dongminyu/react-native-buzzvil';
@@ -20,7 +17,6 @@ import { multiply } from '@dongminyu/react-native-buzzvil';
 
 const result = multiply(3, 7);
 ```
-
 
 ## Contributing
 

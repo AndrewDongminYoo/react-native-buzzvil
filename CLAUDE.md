@@ -12,7 +12,7 @@ A React Native **Turbo Module** package (`@dongminyu/react-native-buzzvil`) that
 
 > **Current state:** the repo is still the unmodified `create-react-native-library` scaffold. The
 > only surface that exists is the placeholder `multiply(a, b)` — JS spec, native impls, and the
-> example app all reference it. Real Buzzvil work means *replacing* `multiply` with the actual SDK
+> example app all reference it. Real Buzzvil work means _replacing_ `multiply` with the actual SDK
 > bridge, not adding alongside it.
 
 ## Commands
