@@ -40,6 +40,22 @@ class BuzzvilNativeAdViewManager :
     view.setLayoutVariant(value ?: "300x250")
   }
 
+  // Map the bubbling event names dispatched by the view to the JS prop handlers
+  // declared in BuzzvilNativeAdViewNativeComponent.ts.
+  override fun getExportedCustomDirectEventTypeConstants(): MutableMap<String, Any> =
+    mutableMapOf(
+      "topAdLoaded" to mapOf("registrationName" to "onAdLoaded"),
+      "topAdFailed" to mapOf("registrationName" to "onAdFailed"),
+      "topAdClicked" to mapOf("registrationName" to "onAdClicked"),
+      "topImpressed" to mapOf("registrationName" to "onImpressed"),
+      "topRewarded" to mapOf("registrationName" to "onRewarded"),
+    )
+
+  override fun onDropViewInstance(view: BuzzvilNativeAdView) {
+    view.cleanup()
+    super.onDropViewInstance(view)
+  }
+
   companion object {
     const val NAME = "BuzzvilNativeAdView"
   }

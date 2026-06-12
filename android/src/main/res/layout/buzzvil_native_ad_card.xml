@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Native (in-feed) ad card. IDs MUST match findViewById() in BuzzvilNativeAdView.kt
+  and the BuzzNativeViewBinder.Builder wiring. The root BuzzNativeAdView is a
+  FrameLayout subclass, so android:orientation is ignored — the real visual
+  layout (spacing/stacking) is refined in a later task; only the binder view
+  references matter here.
+-->
+<com.buzzvil.buzzbenefit.buzznative.BuzzNativeAdView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/buzz_ad_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+  <com.buzzvil.buzzbenefit.buzznative.BuzzMediaView
+      android:id="@+id/buzz_media"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" />
+
+  <ImageView
+      android:id="@+id/buzz_icon"
+      android:layout_width="36dp"
+      android:layout_height="36dp" />
+
+  <TextView
+      android:id="@+id/buzz_title"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content" />
+
+  <TextView
+      android:id="@+id/buzz_desc"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content" />
+
+  <com.buzzvil.buzzbenefit.DefaultBuzzCtaView
+      android:id="@+id/buzz_cta"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content" />
+</com.buzzvil.buzzbenefit.buzznative.BuzzNativeAdView>
