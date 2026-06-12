@@ -1,9 +1,7 @@
-import { View, type ColorValue, type ViewProps } from 'react-native';
+import { View } from 'react-native';
+import type { BuzzvilNativeAdViewProps } from './types';
 
-type Props = ViewProps & {
-  color?: ColorValue;
-};
-
-export function BuzzvilNativeAdView({ color, style, ...rest }: Props) {
-  return <View {...rest} style={[style, { backgroundColor: color }]} />;
+export function BuzzvilNativeAdView({ style }: BuzzvilNativeAdViewProps) {
+  // Buzzvil native ads are not available on web; render nothing visible.
+  return <View style={style} />;
 }

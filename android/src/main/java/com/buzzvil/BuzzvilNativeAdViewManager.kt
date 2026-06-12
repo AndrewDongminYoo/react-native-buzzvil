@@ -1,6 +1,5 @@
 package com.buzzvil
 
-import android.graphics.Color
 import com.facebook.react.module.annotations.ReactModule
 import com.facebook.react.uimanager.SimpleViewManager
 import com.facebook.react.uimanager.ThemedReactContext
@@ -31,9 +30,14 @@ class BuzzvilNativeAdViewManager :
     return BuzzvilNativeAdView(context)
   }
 
-  @ReactProp(name = "color")
-  override fun setColor(view: BuzzvilNativeAdView?, color: Int?) {
-    view?.setBackgroundColor(color ?: Color.TRANSPARENT)
+  @ReactProp(name = "unitId")
+  override fun setUnitId(view: BuzzvilNativeAdView, value: String?) {
+    view.setUnitId(value ?: "")
+  }
+
+  @ReactProp(name = "layout")
+  override fun setLayout(view: BuzzvilNativeAdView, value: String?) {
+    view.setLayoutVariant(value ?: "300x250")
   }
 
   companion object {

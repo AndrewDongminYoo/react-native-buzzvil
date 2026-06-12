@@ -1,15 +1,14 @@
 package com.buzzvil
 
-import android.content.Context
-import android.util.AttributeSet
-import android.view.View
+import android.widget.FrameLayout
+import com.facebook.react.uimanager.ThemedReactContext
 
-class BuzzvilNativeAdView : View {
-  constructor(context: Context?) : super(context)
-  constructor(context: Context?, attrs: AttributeSet?) : super(context, attrs)
-  constructor(context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(
-    context,
-    attrs,
-    defStyleAttr
-  )
+class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
+  // Plain private fields + explicit setters. Do NOT use `var x; private set` —
+  // its generated setX(String) would clash with the fun setX(String) below.
+  private var unitId: String? = null
+  private var layoutVariant: String = "300x250"
+
+  fun setUnitId(id: String) { unitId = id } // later tasks: trigger load
+  fun setLayoutVariant(v: String) { layoutVariant = v } // later tasks: pick layout
 }

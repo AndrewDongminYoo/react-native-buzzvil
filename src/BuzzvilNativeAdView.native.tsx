@@ -1,2 +1,37 @@
-export { default as BuzzvilNativeAdView } from './BuzzvilNativeAdViewNativeComponent';
-export * from './BuzzvilNativeAdViewNativeComponent';
+import NativeComponent from './BuzzvilNativeAdViewNativeComponent';
+import type { BuzzvilNativeAdViewProps } from './types';
+
+const DEFAULT_LAYOUT = '300x250';
+
+export function toNativeProps(props: BuzzvilNativeAdViewProps) {
+  const {
+    layout,
+    onAdLoaded,
+    onAdFailed,
+    onAdClicked,
+    onImpressed,
+    onRewarded,
+    ...rest
+  } = props;
+  return {
+    ...rest,
+    layout: layout ?? DEFAULT_LAYOUT,
+    onAdLoaded: onAdLoaded
+      ? (e: { nativeEvent: { width: number; height: number } }) =>
+          onAdLoaded(e.nativeEvent)
+      : undefined,
+    onAdFailed: onAdFailed
+      ? (e: { nativeEvent: { code: string; message: string } }) =>
+          onAdFailed(e.nativeEvent)
+      : undefined,
+    onAdClicked: onAdClicked ? () => onAdClicked() : undefined,
+    onImpressed: onImpressed ? () => onImpressed() : undefined,
+    onRewarded: onRewarded
+      ? (e: { nativeEvent: { success: boolean } }) => onRewarded(e.nativeEvent)
+      : undefined,
+  };
+}
+
+export function BuzzvilNativeAdView(props: BuzzvilNativeAdViewProps) {
+  return <NativeComponent {...(toNativeProps(props) as any)} />;
+}

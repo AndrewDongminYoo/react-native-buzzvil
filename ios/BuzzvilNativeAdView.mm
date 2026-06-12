@@ -1,7 +1,5 @@
 #import "BuzzvilNativeAdView.h"
 
-#import <React/RCTConversions.h>
-
 #import <react/renderer/components/BuzzvilSpec/ComponentDescriptors.h>
 #import <react/renderer/components/BuzzvilSpec/Props.h>
 #import <react/renderer/components/BuzzvilSpec/RCTComponentViewHelpers.h>
@@ -12,6 +10,8 @@ using namespace facebook::react;
 
 @implementation BuzzvilNativeAdView {
     UIView * _view;
+    std::string _unitId;
+    std::string _layout;
 }
 
 + (ComponentDescriptorProvider)componentDescriptorProvider
@@ -35,12 +35,11 @@ using namespace facebook::react;
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
 {
-    const auto &oldViewProps = *std::static_pointer_cast<BuzzvilNativeAdViewProps const>(_props);
     const auto &newViewProps = *std::static_pointer_cast<BuzzvilNativeAdViewProps const>(props);
 
-    if (oldViewProps.color != newViewProps.color) {
-        [_view setBackgroundColor: RCTUIColorFromSharedColor(newViewProps.color)];
-    }
+    // Store the ad props; real Buzzvil SDK wiring lands in later tasks.
+    _unitId = newViewProps.unitId;
+    _layout = newViewProps.layout;
 
     [super updateProps:props oldProps:oldProps];
 }
