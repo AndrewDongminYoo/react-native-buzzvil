@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Native (banner) ad layout for the 320x50 / 320x100 / 320x130 inventory sizes.
+  Horizontal, compact: icon + title/description + CTA, with NO visible media.
+
+  IDs MUST match findViewById() in BuzzvilNativeAdView.kt and the
+  BuzzNativeViewBinder.Builder wiring. The root BuzzNativeAdView is a FrameLayout
+  subclass, so the actual horizontal arrangement lives in the inner LinearLayout.
+
+  buzz_media is REQUIRED: BuzzNativeViewBinder.Builder.build() throws
+  "MediaView is not bound." if buzzMediaView() is null (verified via javap on
+  buzzad-benefit-base 6.7.7). It is kept 0dp + gone so no media is shown for
+  banners while still satisfying the binder.
+-->
+<com.buzzvil.buzzbenefit.buzznative.BuzzNativeAdView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/buzz_ad_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+  <com.buzzvil.buzzbenefit.buzznative.BuzzMediaView
+      android:id="@+id/buzz_media"
+      android:layout_width="0dp"
+      android:layout_height="0dp"
+      android:visibility="gone" />
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:orientation="horizontal"
+      android:gravity="center_vertical"
+      android:paddingStart="8dp"
+      android:paddingEnd="8dp">
+
+    <ImageView
+        android:id="@+id/buzz_icon"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="8dp" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+      <TextView
+          android:id="@+id/buzz_title"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:maxLines="1"
+          android:ellipsize="end" />
+
+      <TextView
+          android:id="@+id/buzz_desc"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:maxLines="1"
+          android:ellipsize="end" />
+    </LinearLayout>
+
+    <com.buzzvil.buzzbenefit.DefaultBuzzCtaView
+        android:id="@+id/buzz_cta"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp" />
+  </LinearLayout>
+</com.buzzvil.buzzbenefit.buzznative.BuzzNativeAdView>

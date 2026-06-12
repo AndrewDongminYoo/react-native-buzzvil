@@ -1,9 +1,11 @@
 package com.buzzvil
 
 import android.view.LayoutInflater
+import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.view.doOnLayout
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactContext
 import com.facebook.react.bridge.UiThreadUtil
@@ -111,13 +113,42 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
     )
   }
 
-  private fun layoutResFor(variant: String): Int = R.layout.buzzvil_native_ad_card // TODO(layout-variants task): add buzzvil_native_ad_banner for 320x50/100/130 and map by size
+  // Two layout families: compact horizontal banner (no media) for the small
+  // inventory sizes, the vertical media-on-top card for the large ones.
+  private fun layoutResFor(variant: String): Int =
+    when (variant) {
+      "320x50", "320x100", "320x130" -> R.layout.buzzvil_native_ad_banner
+      else -> R.layout.buzzvil_native_ad_card
+    }
+
+  // Fixed inventory-box height (dp) per exact size. Width comes from the JS
+  // `style`. NOTE: under Fabric the host frame is ultimately driven by the
+  // shadow node, so this height is a best-effort hint — see CLAUDE notes / PR.
+  private fun heightDpFor(variant: String): Int =
+    when (variant) {
+      "320x50" -> 50
+      "320x100" -> 100
+      "320x130" -> 130
+      "300x250" -> 250
+      "320x480" -> 480
+      else -> 250
+    }
 
   private fun bindLoadedAd(buzz: BuzzNative) {
     val adView = LayoutInflater.from(context)
       .inflate(layoutResFor(layoutVariant), this, false) as BuzzAdView
     removeAllViews()
     addView(adView)
+
+    // Pin the host to the inventory-box height (px from dp); width stays from style.
+    val density = resources.displayMetrics.density
+    val heightPx = (heightDpFor(layoutVariant) * density).toInt()
+    layoutParams = (
+      layoutParams ?: FrameLayout.LayoutParams(
+        ViewGroup.LayoutParams.MATCH_PARENT,
+        heightPx,
+      )
+      ).apply { height = heightPx }
 
     val media = adView.findViewById<BuzzMediaView>(R.id.buzz_media)
     val icon = adView.findViewById<ImageView>(R.id.buzz_icon)
@@ -136,10 +167,16 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
     // bind() takes the BuzzNative loader, not the loaded BuzzNativeAd.
     binder?.bind(buzz)
 
-    val payload = Arguments.createMap()
-    payload.putDouble("width", width.toDouble())
-    payload.putDouble("height", height.toDouble())
-    emit("topAdLoaded", payload)
+    // Emit the REAL measured size, not the pre-layout {0,0}. doOnLayout fires
+    // once on the next layout pass (it self-removes), so this emits exactly once
+    // per load with non-zero dimensions.
+    doOnLayout {
+      if (disposed) return@doOnLayout
+      val payload = Arguments.createMap()
+      payload.putDouble("width", width.toDouble())
+      payload.putDouble("height", height.toDouble())
+      emit("topAdLoaded", payload)
+    }
   }
 
   private fun emit(eventName: String, payload: WritableMap) {

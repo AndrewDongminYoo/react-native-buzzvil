@@ -24,6 +24,21 @@ using namespace facebook::react;
   BuzzNative *_native;
   BuzzNativeViewBinder *_binder;
 
+  // Layout-variant state. The subviews are created in initWithFrame:, but the
+  // `layout` prop (which family + height to use) only arrives in updateProps:.
+  // Fabric recycles iOS views by COMPONENT TYPE, not by props, so a view first
+  // mounted as a banner can be reused for a card cell — the arrangement must be
+  // (re)applied whenever the resolved variant changes, not just once. We track
+  // the variant currently applied and the constraints we activated for it so a
+  // change can deactivate the old set before activating the new one.
+  NSString *_appliedVariant;
+  NSArray<NSLayoutConstraint *> *_variantConstraints;
+
+  // Set when a load succeeds; the real size is emitted from layoutSubviews once
+  // bounds are non-zero (a pre-layout emit would report {w,0}). Reset per load /
+  // on recycle so we emit exactly once per successful load.
+  BOOL _pendingLoadedEmit;
+
   // The unit id of the in-flight / loaded ad. Doubles as the recycle guard:
   // Fabric reuses the SAME object across cells (prepareForRecycle), so a stale
   // async callback must bail when this no longer matches the id it captured.
@@ -43,17 +58,18 @@ using namespace facebook::react;
     static const auto defaultProps = std::make_shared<const BuzzvilNativeAdViewProps>();
     _props = defaultProps;
 
-    [self buildAdCard];
+    [self buildSubviews];
     self.contentView = _adContainer;
   }
 
   return self;
 }
 
-// Builds the BuzzNativeAdView container holding (vertically, via Auto Layout) a
-// media view, icon, title, description, and CTA. Visual refinement is a later
-// task — wiring the binder-required views correctly is what matters here.
-- (void)buildAdCard
+// Allocates the BuzzNativeAdView container and its subviews (media, icon, title,
+// description, CTA) and adds them to the container. Does NOT activate any
+// arrangement constraints — the family (banner vs card) is only known once the
+// `layout` prop arrives, so layout is applied later in applyLayoutVariant:.
+- (void)buildSubviews
 {
   _adContainer = [[BuzzNativeAdView alloc] initWithFrame:CGRectZero];
 
@@ -71,40 +87,118 @@ using namespace facebook::react;
     child.translatesAutoresizingMaskIntoConstraints = NO;
     [_adContainer addSubview:child];
   }
+}
 
-  // Simple vertical stack pinned to the container edges. Exact sizing is refined
-  // in the layout-variants task.
-  [NSLayoutConstraint activateConstraints:@[
-    [_mediaView.topAnchor constraintEqualToAnchor:_adContainer.topAnchor],
-    [_mediaView.leadingAnchor constraintEqualToAnchor:_adContainer.leadingAnchor],
-    [_mediaView.trailingAnchor constraintEqualToAnchor:_adContainer.trailingAnchor],
+// Fixed inventory-box height (pt) per exact size. Width comes from the JS
+// `style`. NOTE: under Fabric the host frame is ultimately driven by the shadow
+// node, so this height is a best-effort hint (see PR notes).
+- (CGFloat)heightForVariant:(NSString *)variant
+{
+  if ([variant isEqualToString:@"320x50"]) return 50;
+  if ([variant isEqualToString:@"320x100"]) return 100;
+  if ([variant isEqualToString:@"320x130"]) return 130;
+  if ([variant isEqualToString:@"320x480"]) return 480;
+  return 250; // 300x250 and default
+}
 
-    [_iconView.topAnchor constraintEqualToAnchor:_mediaView.bottomAnchor constant:8],
-    [_iconView.leadingAnchor constraintEqualToAnchor:_adContainer.leadingAnchor constant:8],
-    [_iconView.widthAnchor constraintEqualToConstant:40],
-    [_iconView.heightAnchor constraintEqualToConstant:40],
+- (BOOL)isBannerVariant:(NSString *)variant
+{
+  return [variant isEqualToString:@"320x50"] || [variant isEqualToString:@"320x100"] ||
+      [variant isEqualToString:@"320x130"];
+}
 
-    [_titleLabel.topAnchor constraintEqualToAnchor:_iconView.topAnchor],
-    [_titleLabel.leadingAnchor constraintEqualToAnchor:_iconView.trailingAnchor constant:8],
-    [_titleLabel.trailingAnchor constraintEqualToAnchor:_adContainer.trailingAnchor constant:-8],
+// Activates the correct arrangement (banner OR card) plus a fixed height
+// constraint. Banner: horizontal icon + title/desc + CTA, media hidden+zero-size
+// (the binder REQUIRES a non-nil mediaView — verified against the SDK header:
+// "Required component"). Card: the original vertical stack with media on top.
+// Re-appliable: a no-op when the variant is unchanged, otherwise the previously
+// activated constraints are deactivated first (a recycled view may switch family).
+- (void)applyLayoutVariant:(NSString *)variant
+{
+  if ([variant isEqualToString:_appliedVariant]) {
+    return;
+  }
+  if (_variantConstraints.count > 0) {
+    [NSLayoutConstraint deactivateConstraints:_variantConstraints];
+  }
+  _appliedVariant = variant;
 
-    [_descriptionLabel.topAnchor constraintEqualToAnchor:_titleLabel.bottomAnchor constant:4],
-    [_descriptionLabel.leadingAnchor constraintEqualToAnchor:_titleLabel.leadingAnchor],
-    [_descriptionLabel.trailingAnchor constraintEqualToAnchor:_adContainer.trailingAnchor constant:-8],
+  BOOL banner = [self isBannerVariant:variant];
+  _mediaView.hidden = banner;
 
-    [_ctaView.topAnchor constraintEqualToAnchor:_iconView.bottomAnchor constant:8],
-    [_ctaView.leadingAnchor constraintEqualToAnchor:_adContainer.leadingAnchor constant:8],
-    [_ctaView.trailingAnchor constraintEqualToAnchor:_adContainer.trailingAnchor constant:-8],
-    [_ctaView.bottomAnchor constraintEqualToAnchor:_adContainer.bottomAnchor constant:-8],
-  ]];
+  NSMutableArray<NSLayoutConstraint *> *constraints = [NSMutableArray array];
+
+  if (banner) {
+    // Media kept in the tree (binder requires it) but collapsed to zero size.
+    [constraints addObjectsFromArray:@[
+      [_mediaView.widthAnchor constraintEqualToConstant:0],
+      [_mediaView.heightAnchor constraintEqualToConstant:0],
+      [_mediaView.topAnchor constraintEqualToAnchor:_adContainer.topAnchor],
+      [_mediaView.leadingAnchor constraintEqualToAnchor:_adContainer.leadingAnchor],
+
+      [_iconView.leadingAnchor constraintEqualToAnchor:_adContainer.leadingAnchor constant:8],
+      [_iconView.centerYAnchor constraintEqualToAnchor:_adContainer.centerYAnchor],
+      [_iconView.widthAnchor constraintEqualToConstant:36],
+      [_iconView.heightAnchor constraintEqualToConstant:36],
+
+      [_titleLabel.topAnchor constraintEqualToAnchor:_adContainer.topAnchor constant:8],
+      [_titleLabel.leadingAnchor constraintEqualToAnchor:_iconView.trailingAnchor constant:8],
+      [_titleLabel.trailingAnchor constraintEqualToAnchor:_ctaView.leadingAnchor constant:-8],
+
+      [_descriptionLabel.topAnchor constraintEqualToAnchor:_titleLabel.bottomAnchor constant:2],
+      [_descriptionLabel.leadingAnchor constraintEqualToAnchor:_titleLabel.leadingAnchor],
+      [_descriptionLabel.trailingAnchor constraintEqualToAnchor:_titleLabel.trailingAnchor],
+
+      [_ctaView.trailingAnchor constraintEqualToAnchor:_adContainer.trailingAnchor constant:-8],
+      [_ctaView.centerYAnchor constraintEqualToAnchor:_adContainer.centerYAnchor],
+    ]];
+  } else {
+    // Vertical stack: media on top, then icon + title/desc, then CTA.
+    [constraints addObjectsFromArray:@[
+      [_mediaView.topAnchor constraintEqualToAnchor:_adContainer.topAnchor],
+      [_mediaView.leadingAnchor constraintEqualToAnchor:_adContainer.leadingAnchor],
+      [_mediaView.trailingAnchor constraintEqualToAnchor:_adContainer.trailingAnchor],
+
+      [_iconView.topAnchor constraintEqualToAnchor:_mediaView.bottomAnchor constant:8],
+      [_iconView.leadingAnchor constraintEqualToAnchor:_adContainer.leadingAnchor constant:8],
+      [_iconView.widthAnchor constraintEqualToConstant:40],
+      [_iconView.heightAnchor constraintEqualToConstant:40],
+
+      [_titleLabel.topAnchor constraintEqualToAnchor:_iconView.topAnchor],
+      [_titleLabel.leadingAnchor constraintEqualToAnchor:_iconView.trailingAnchor constant:8],
+      [_titleLabel.trailingAnchor constraintEqualToAnchor:_adContainer.trailingAnchor constant:-8],
+
+      [_descriptionLabel.topAnchor constraintEqualToAnchor:_titleLabel.bottomAnchor constant:4],
+      [_descriptionLabel.leadingAnchor constraintEqualToAnchor:_titleLabel.leadingAnchor],
+      [_descriptionLabel.trailingAnchor constraintEqualToAnchor:_adContainer.trailingAnchor constant:-8],
+
+      [_ctaView.topAnchor constraintEqualToAnchor:_iconView.bottomAnchor constant:8],
+      [_ctaView.leadingAnchor constraintEqualToAnchor:_adContainer.leadingAnchor constant:8],
+      [_ctaView.trailingAnchor constraintEqualToAnchor:_adContainer.trailingAnchor constant:-8],
+      [_ctaView.bottomAnchor constraintEqualToAnchor:_adContainer.bottomAnchor constant:-8],
+    ]];
+  }
+
+  // Fixed inventory-box height on the container.
+  [constraints addObject:[_adContainer.heightAnchor constraintEqualToConstant:[self heightForVariant:variant]]];
+
+  _variantConstraints = constraints;
+  [NSLayoutConstraint activateConstraints:constraints];
 }
 
 - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &)oldProps
 {
   const auto &newViewProps = *std::static_pointer_cast<BuzzvilNativeAdViewProps const>(props);
 
-  // `layout` is consumed by the visual layout task; read it so the prop is wired.
-  (void)newViewProps.layout;
+  // Resolve the layout family/height from the `layout` prop (empty -> card
+  // default) and apply the arrangement. applyLayoutVariant: is a no-op when the
+  // variant is unchanged, so this runs on every updateProps but only does work
+  // on first mount or when a recycled view switches family. Must happen before
+  // the load below so the binder sees the correct (banner vs card) view tree.
+  NSString *variant = newViewProps.layout.empty()
+      ? @"300x250"
+      : [NSString stringWithUTF8String:newViewProps.layout.c_str()];
+  [self applyLayoutVariant:variant];
 
   const std::string &unitId = newViewProps.unitId;
   // Fabric sets props in any order and may re-deliver them; only (re)load when a
@@ -124,6 +218,7 @@ using namespace facebook::react;
   [_binder unbind];
   _binder = nil;
   _native = nil;
+  _pendingLoadedEmit = NO;
 
   NSString *unitIdString = [NSString stringWithUTF8String:unitId.c_str()];
   // Capture the id this load is for; the recycle guard compares against it.
@@ -198,8 +293,23 @@ using namespace facebook::react;
   // bind() takes the BuzzNative loader, not the loaded BuzzNativeAd (mirrors Android).
   [_binder bind:_native];
 
-  CGSize size = _adContainer.bounds.size;
-  [self emitLoadedWithWidth:size.width height:size.height];
+  // Defer the size emit to layoutSubviews: at bind time the view hasn't been
+  // laid out yet, so bounds would be {w,0}. layoutSubviews fires once a real
+  // frame is assigned; the flag makes us emit exactly once per load.
+  _pendingLoadedEmit = YES;
+  [self setNeedsLayout];
+}
+
+- (void)layoutSubviews
+{
+  [super layoutSubviews];
+
+  // Emit the real measured size once the host has a non-zero frame.
+  if (_pendingLoadedEmit && self.bounds.size.width > 0 && self.bounds.size.height > 0) {
+    _pendingLoadedEmit = NO;
+    CGSize size = self.bounds.size;
+    [self emitLoadedWithWidth:size.width height:size.height];
+  }
 }
 
 #pragma mark - Event emitter
@@ -263,6 +373,7 @@ using namespace facebook::react;
   _binder = nil;
   _native = nil;
   _loadedUnitId.clear();
+  _pendingLoadedEmit = NO;
 
   [super prepareForRecycle];
 }
