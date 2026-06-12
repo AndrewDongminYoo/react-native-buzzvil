@@ -32,9 +32,11 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
   private var unitId: String? = null
   private var layoutVariant: String = "300x250"
 
+  @Volatile private var disposed = false
+
   private var buzzNative: BuzzNative? = null
   private var binder: BuzzNativeViewBinder? = null
-  private var loaded = false
+  private var loadAttempted = false
 
   fun setUnitId(id: String) {
     unitId = id.ifEmpty { null }
@@ -51,12 +53,12 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
   }
 
   // Fabric sets props in any order, and the view may not be attached when the
-  // unitId arrives — both entry points call this, the `loaded` guard makes it
+  // unitId arrives — both entry points call this, the `loadAttempted` guard makes it
   // idempotent so we load exactly once.
   private fun loadIfReady() {
     val id = unitId
-    if (loaded || id == null || !isAttachedToWindow) return
-    loaded = true
+    if (loadAttempted || id == null || !isAttachedToWindow) return
+    loadAttempted = true
 
     val buzz = BuzzNative(id)
     buzzNative = buzz
@@ -90,12 +92,16 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
     buzz.load(
       { _ ->
         // Inflate + bind must touch views on the UI thread.
-        UiThreadUtil.runOnUiThread { bindLoadedAd(buzz) }
+        UiThreadUtil.runOnUiThread {
+          if (disposed) return@runOnUiThread
+          bindLoadedAd(buzz)
+        }
       },
       { error ->
         // Marshal to the UI thread for symmetry with the success path; the SDK
         // gives no thread guarantee for these callbacks.
         UiThreadUtil.runOnUiThread {
+          if (disposed) return@runOnUiThread
           val payload = Arguments.createMap()
           payload.putString("code", error.type.name)
           payload.putString("message", error.message ?: error.type.name)
@@ -105,9 +111,11 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
     )
   }
 
+  private fun layoutResFor(variant: String): Int = R.layout.buzzvil_native_ad_card // TODO(layout-variants task): add buzzvil_native_ad_banner for 320x50/100/130 and map by size
+
   private fun bindLoadedAd(buzz: BuzzNative) {
     val adView = LayoutInflater.from(context)
-      .inflate(R.layout.buzzvil_native_ad_card, this, false) as BuzzAdView
+      .inflate(layoutResFor(layoutVariant), this, false) as BuzzAdView
     removeAllViews()
     addView(adView)
 
@@ -142,10 +150,12 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
   }
 
   fun cleanup() {
+    disposed = true
+    binder?.unbind()
     binder?.dispose()
     binder = null
     buzzNative = null
-    loaded = false
+    loadAttempted = false
     removeAllViews()
   }
 
