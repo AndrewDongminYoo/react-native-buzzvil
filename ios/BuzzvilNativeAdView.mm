@@ -10,8 +10,6 @@
 #import <react/renderer/components/BuzzvilSpec/Props.h>
 #import <react/renderer/components/BuzzvilSpec/RCTComponentViewHelpers.h>
 
-#import "RCTFabricComponentsPlugins.h"
-
 using namespace facebook::react;
 
 @implementation BuzzvilNativeAdView {
@@ -121,6 +119,12 @@ using namespace facebook::react;
 
 - (void)loadAdWithUnitId:(const std::string &)unitId
 {
+  // Tear down any previous ad before a new load (mirrors prepareForRecycle);
+  // a unitId prop change on a mounted view reuses this same object.
+  [_binder unbind];
+  _binder = nil;
+  _native = nil;
+
   NSString *unitIdString = [NSString stringWithUTF8String:unitId.c_str()];
   // Capture the id this load is for; the recycle guard compares against it.
   std::string requestedUnitId = unitId;
