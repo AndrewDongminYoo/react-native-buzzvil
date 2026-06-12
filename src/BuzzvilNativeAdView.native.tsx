@@ -24,8 +24,11 @@ export function toNativeProps(props: BuzzvilNativeAdViewProps) {
       ? (e: { nativeEvent: { code: string; message: string } }) =>
           onAdFailed(e.nativeEvent)
       : undefined,
-    onAdClicked: onAdClicked ? () => onAdClicked() : undefined,
-    onImpressed: onImpressed ? () => onImpressed() : undefined,
+    // No payload — pass the friendly handler straight through (it ignores the
+    // native event arg). Avoids an empty wrapper that could mislead a future
+    // contributor copying the pattern for a payload-carrying event.
+    onAdClicked,
+    onImpressed,
     onRewarded: onRewarded
       ? (e: { nativeEvent: { success: boolean } }) => onRewarded(e.nativeEvent)
       : undefined,

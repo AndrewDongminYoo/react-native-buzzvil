@@ -23,6 +23,13 @@ describe('toNativeProps — friendly→native mapping', () => {
     } as any);
     expect(onAdLoaded).toHaveBeenCalledWith({ width: 300, height: 250 });
   });
+  it('unwraps onAdFailed nativeEvent', () => {
+    const onAdFailed = jest.fn();
+    toNativeProps({ unitId: 'u1', onAdFailed }).onAdFailed?.({
+      nativeEvent: { code: 'E1', message: 'boom' },
+    } as any);
+    expect(onAdFailed).toHaveBeenCalledWith({ code: 'E1', message: 'boom' });
+  });
   it('unwraps onRewarded nativeEvent', () => {
     const onRewarded = jest.fn();
     toNativeProps({ unitId: 'u1', onRewarded }).onRewarded?.({
