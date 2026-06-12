@@ -5,12 +5,9 @@ import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UiThreadUtil
 
-// NOTE: The Buzzvil class names and import paths below are taken from the
-// BuzzBenefit v6 Android documentation; they have NOT been introspected from
-// the resolved `com.buzzvil:buzzvil-sdk` AAR (no Gradle sync was run when this
-// was written). Verify the imports at the first Gradle sync. The wrapper logic
-// (listener→Promise, sentinel handling, currentActivity, threading) is correct
-// independent of the exact package paths.
+// The Buzzvil class names and import paths below are verified against the
+// resolved `com.buzzvil:buzzvil-sdk` AAR (buzzvil-bom 6.7.x) — this module
+// compiles cleanly via `:dongminyu_react-native-buzzvil:compileDebugKotlin`.
 import com.buzzvil.buzzbenefit.BuzzBenefitConfig
 import com.buzzvil.buzzbenefit.benefithub.BuzzBenefitHub
 import com.buzzvil.buzzbenefit.benefithub.BuzzBenefitHubConfig
