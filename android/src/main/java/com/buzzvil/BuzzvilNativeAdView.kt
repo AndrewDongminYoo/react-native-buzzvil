@@ -38,7 +38,12 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
 
   private var buzzNative: BuzzNative? = null
   private var binder: BuzzNativeViewBinder? = null
-  private var loadAttempted = false
+
+  // The unit id of the in-flight / loaded ad. Doubles as the reload guard: an
+  // in-place `unitId` prop change must (re)load (mirrors iOS's `_loadedUnitId`
+  // comparison). Cleared in cleanup() so a recycled view can load again — never
+  // latched permanently.
+  private var loadedUnitId: String? = null
 
   fun setUnitId(id: String) {
     unitId = id.ifEmpty { null }
@@ -55,12 +60,25 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
   }
 
   // Fabric sets props in any order, and the view may not be attached when the
-  // unitId arrives — both entry points call this, the `loadAttempted` guard makes it
-  // idempotent so we load exactly once.
+  // unitId arrives — both entry points call this. Guard on an id comparison
+  // (mirrors iOS): (re)load only when a non-null unitId actually changes, so an
+  // in-place `unitId` prop change on a mounted view reloads instead of being
+  // ignored.
   private fun loadIfReady() {
     val id = unitId
-    if (loadAttempted || id == null || !isAttachedToWindow) return
-    loadAttempted = true
+    if (id == null || !isAttachedToWindow || id == loadedUnitId) return
+    loadedUnitId = id
+
+    // Tear down any previous ad before the new load (mirrors cleanup()'s
+    // teardown); a unitId change on a mounted view reuses this same object.
+    binder?.unbind()
+    binder?.dispose()
+    binder = null
+    buzzNative = null
+    removeAllViews()
+    // Re-arm the in-flight guard so the new load's callbacks (and the
+    // doOnLayout size emit) are not blocked by a previous cleanup()/load.
+    disposed = false
 
     val buzz = BuzzNative(id)
     buzzNative = buzz
@@ -93,9 +111,12 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
 
     buzz.load(
       { _ ->
-        // Inflate + bind must touch views on the UI thread.
+        // Inflate + bind must touch views on the UI thread. Re-check the reload
+        // guard on the UI thread (mirrors iOS): a late callback from a previous
+        // unitId must bail when `loadedUnitId` has since changed, otherwise it
+        // would bind a stale ad and double-emit.
         UiThreadUtil.runOnUiThread {
-          if (disposed) return@runOnUiThread
+          if (disposed || id != loadedUnitId) return@runOnUiThread
           bindLoadedAd(buzz)
         }
       },
@@ -103,7 +124,7 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
         // Marshal to the UI thread for symmetry with the success path; the SDK
         // gives no thread guarantee for these callbacks.
         UiThreadUtil.runOnUiThread {
-          if (disposed) return@runOnUiThread
+          if (disposed || id != loadedUnitId) return@runOnUiThread
           val payload = Arguments.createMap()
           payload.putString("code", error.type.name)
           payload.putString("message", error.message ?: error.type.name)
@@ -172,9 +193,14 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
     // per load with non-zero dimensions.
     doOnLayout {
       if (disposed) return@doOnLayout
+      // getWidth()/getHeight() are physical pixels; RN's coordinate system is
+      // DP/points, so divide by display density to match iOS (which emits
+      // UIKit points). Same `displayMetrics.density` used for the fixed-height
+      // calc above.
+      val density = resources.displayMetrics.density
       val payload = Arguments.createMap()
-      payload.putDouble("width", width.toDouble())
-      payload.putDouble("height", height.toDouble())
+      payload.putDouble("width", width / density.toDouble())
+      payload.putDouble("height", height / density.toDouble())
       emit("topAdLoaded", payload)
     }
   }
@@ -192,7 +218,9 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
     binder?.dispose()
     binder = null
     buzzNative = null
-    loadAttempted = false
+    // Clear the reload guard for recycle symmetry with iOS (prepareForRecycle):
+    // a reused view must be able to load again.
+    loadedUnitId = null
     removeAllViews()
   }
 

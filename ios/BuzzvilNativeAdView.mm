@@ -12,6 +12,12 @@
 
 using namespace facebook::react;
 
+// Private helper declared up-front so the load callback (defined before the
+// method body) can reference it.
+@interface BuzzvilNativeAdView ()
++ (NSString *)symbolicCodeForError:(NSError *)error;
+@end
+
 @implementation BuzzvilNativeAdView {
   // Buzzvil ad card subviews, held so the binder can wire them post-load.
   BuzzNativeAdView *_adContainer;
@@ -268,7 +274,13 @@ using namespace facebook::react;
     });
   }
       onFailure:^(NSError *error) {
-        NSString *codeString = [@(error.code) stringValue];
+        // Converge on the SAME symbolic UPPER_SNAKE code Android emits via
+        // `BuzzAdError.Type.name`, so a JS consumer can branch on `code`
+        // portably. The SDK's NSError carries a `BuzzErrorCode` raw value
+        // (domain `com.buzzvil.sdk.error`); map each to Android's name. Note
+        // code 6 maps to GOOGLE_AGE_POLICY to match Android's actual enum name
+        // (Android's `Type` is GOOGLE_AGE_POLICY, not AGE_POLICY).
+        NSString *codeString = [BuzzvilNativeAdView symbolicCodeForError:error];
         NSString *messageString = error.localizedDescription;
         dispatch_async(dispatch_get_main_queue(), ^{
           BuzzvilNativeAdView *strongSelf = weakSelf;
@@ -326,6 +338,36 @@ using namespace facebook::react;
   }
   [self eventEmitterRef].onAdLoaded(
       BuzzvilNativeAdViewEventEmitter::OnAdLoaded{.width = (double)width, .height = (double)height});
+}
+
+// Maps the SDK's NSError (a `BuzzErrorCode` raw value under domain
+// `com.buzzvil.sdk.error`) to the SAME symbolic UPPER_SNAKE string Android
+// emits via `BuzzAdError.Type.name`, so `code` is portable across platforms.
+// Defaults to "UNKNOWN" for any unrecognized code (and for non-Buzzvil errors).
++ (NSString *)symbolicCodeForError:(NSError *)error
+{
+  switch ((enum BuzzErrorCode)error.code) {
+    case BuzzErrorCodeServerError:
+      return @"SERVER_ERROR";
+    case BuzzErrorCodeClientError:
+      return @"CLIENT_ERROR";
+    case BuzzErrorCodeConnectionTimeout:
+      return @"CONNECTION_TIMEOUT";
+    case BuzzErrorCodeEmptyResponse:
+      return @"EMPTY_RESPONSE";
+    case BuzzErrorCodeWaitingForResponse:
+      return @"WAITING_FOR_RESPONSE";
+    case BuzzErrorCodeAgePolicy:
+      // Android's enum name is GOOGLE_AGE_POLICY; match it for a shared string.
+      return @"GOOGLE_AGE_POLICY";
+    case BuzzErrorCodePrivacyPolicyNotGranted:
+      return @"PRIVACY_POLICY_NOT_GRANTED";
+    case BuzzErrorCodeNotInitialized:
+      return @"NOT_INITIALIZED";
+    case BuzzErrorCodeUnknown:
+    default:
+      return @"UNKNOWN";
+  }
 }
 
 - (void)emitFailedWithCode:(NSString *)code message:(NSString *)message
