@@ -5,7 +5,23 @@ jest.mock('../BuzzvilNativeAdViewNativeComponent', () => ({
   default: 'BuzzvilNativeAdView',
 }));
 
-import { toNativeProps } from '../BuzzvilNativeAdView.native';
+import { sizeForLayout, toNativeProps } from '../BuzzvilNativeAdView.native';
+
+describe('sizeForLayout — layout→default inventory size', () => {
+  it('returns each known layout’s pixel size', () => {
+    expect(sizeForLayout('320x50')).toEqual({ width: 320, height: 50 });
+    expect(sizeForLayout('320x100')).toEqual({ width: 320, height: 100 });
+    expect(sizeForLayout('320x130')).toEqual({ width: 320, height: 130 });
+    expect(sizeForLayout('300x250')).toEqual({ width: 300, height: 250 });
+    expect(sizeForLayout('320x480')).toEqual({ width: 320, height: 480 });
+  });
+  it('falls back to 300x250 when layout is undefined', () => {
+    expect(sizeForLayout(undefined)).toEqual({ width: 300, height: 250 });
+  });
+  it('falls back to 300x250 for an unknown layout', () => {
+    expect(sizeForLayout('999x999')).toEqual({ width: 300, height: 250 });
+  });
+});
 
 describe('toNativeProps — friendly→native mapping', () => {
   it('defaults layout to 300x250 when omitted', () => {

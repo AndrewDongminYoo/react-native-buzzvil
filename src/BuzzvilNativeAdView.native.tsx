@@ -1,5 +1,8 @@
 import NativeComponent from './BuzzvilNativeAdViewNativeComponent';
+import { sizeForLayout } from './layout';
 import type { BuzzvilNativeAdViewProps } from './types';
+
+export { sizeForLayout };
 
 const DEFAULT_LAYOUT = '300x250';
 
@@ -36,5 +39,10 @@ export function toNativeProps(props: BuzzvilNativeAdViewProps) {
 }
 
 export function BuzzvilNativeAdView(props: BuzzvilNativeAdViewProps) {
-  return <NativeComponent {...(toNativeProps(props) as any)} />;
+  const native = toNativeProps(props);
+  const size = sizeForLayout(props.layout);
+  // Apply the inventory size as a DEFAULT style; the consumer's `style` is
+  // last in the array, so it overrides. `style` is set once here (the explicit
+  // prop wins over the one carried in `native`'s spread).
+  return <NativeComponent {...(native as any)} style={[size, props.style]} />;
 }
