@@ -5,8 +5,13 @@ import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.module.model.ReactModuleInfo
 import com.facebook.react.module.model.ReactModuleInfoProvider
+import com.facebook.react.uimanager.ViewManager
 
 class BuzzvilPackage : BaseReactPackage() {
+  override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
+    return listOf(BuzzvilNativeAdViewManager())
+  }
+
   override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
     return if (name == BuzzvilModule.NAME) {
       BuzzvilModule(reactContext)
