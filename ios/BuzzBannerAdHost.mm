@@ -97,7 +97,11 @@
   // stringified (NOT the native-ad path's symbolic UPPER_SNAKE name), with the
   // localized description as the message (fallback to the code).
   NSString *code = [@(error.code) stringValue];
-  NSString *message = error.localizedDescription.length > 0 ? error.localizedDescription : code;
+  // The SDK's localizedDescription can be terse (e.g. "exception"); append the
+  // error domain + code so the JS `message` is self-describing in logs. The bare
+  // numeric `code` field is preserved for programmatic handling.
+  NSString *description = error.localizedDescription.length > 0 ? error.localizedDescription : @"unknown error";
+  NSString *message = [NSString stringWithFormat:@"%@ (domain=%@, code=%@)", description, error.domain, code];
   [self.adDelegate bannerAdHost:self didFailWithCode:code message:message];
 }
 

@@ -109,7 +109,11 @@ class BuzzBannerView(
           val payload = Arguments.createMap()
           val code = error.errorCode.toString()
           payload.putString("code", code)
-          payload.putString("message", error.errorMessage ?: code)
+          // Append the code so the JS `message` is self-describing in logs
+          // (mirrors iOS); the bare `code` field is preserved for programmatic
+          // handling. AdError exposes no domain, so only the code is appended.
+          val description = error.errorMessage?.takeIf { it.isNotEmpty() } ?: "unknown error"
+          payload.putString("message", "$description (code=$code)")
           emit("topFailed", payload)
         }
 
