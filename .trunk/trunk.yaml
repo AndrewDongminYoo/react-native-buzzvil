@@ -21,11 +21,6 @@ lint:
       paths: [example/android/gradlew]
     - linters: [trufflehog]
       paths: [.yarn/releases/yarn-4.11.0.cjs, yarn.lock]
-    - linters: [eslint]
-      paths:
-        - .yarn/releases/yarn-4.11.0.cjs
-        - eslint.config.mjs
-        - example/vite.config.mjs
     - linters: [yamllint]
       paths: [.github/workflows/*.yml]
   enabled:
