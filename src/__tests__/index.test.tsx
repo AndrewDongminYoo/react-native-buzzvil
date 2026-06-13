@@ -118,6 +118,11 @@ describe('buzzvil native wrapper — sentinel mapping', () => {
       'missionPack'
     );
   });
+
+  it('passes page:history as the third sentinel', () => {
+    showBenefitHub({ page: 'history' });
+    expect(native.showBenefitHub).toHaveBeenCalledWith('', false, 'history');
+  });
 });
 
 describe('userIdWarnings — dev userId sanity checks', () => {

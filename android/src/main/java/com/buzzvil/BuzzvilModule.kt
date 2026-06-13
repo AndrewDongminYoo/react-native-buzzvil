@@ -101,6 +101,9 @@ class BuzzvilModule(
           if (showHistory) configBuilder.queryParams(BuzzBenefitHubPage.HISTORY.toRedirectQueryParams())
         }
       }
+      // An empty (default-built) config is equivalent to passing no config —
+      // parity with the iOS `needsConfig` guard, which skips setConfig on the
+      // all-sentinel path.
       BuzzBenefitHub.show(activity, configBuilder.build())
     }
   }
