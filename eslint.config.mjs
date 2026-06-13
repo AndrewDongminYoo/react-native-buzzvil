@@ -24,6 +24,13 @@ export default defineConfig([
     },
   },
   {
-    ignores: ['node_modules/', 'lib/', 'example/dist/'],
+    ignores: [
+      '.yarn/releases/yarn-4.11.0.cjs',
+      'eslint.config.mjs',
+      'example/dist/',
+      'example/vite.config.mjs',
+      'lib/',
+      'node_modules/',
+    ],
   },
 ]);
