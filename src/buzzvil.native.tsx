@@ -12,8 +12,40 @@ export function initialize(appId: string): void {
   Buzzvil.initialize(appId);
 }
 
+/**
+ * Dev-only sanity checks for `userId`. Buzzvil requires a non-PII, stable,
+ * ASCII identifier (≤255 chars) — not an email or login id. Returns a list of
+ * human-readable warnings (empty when the id looks fine). Pure: `login` logs
+ * these via `console.warn` only under `__DEV__`; it never alters behavior or
+ * blocks the call (the SDK is the source of truth on acceptance).
+ */
+export function userIdWarnings(userId: string): string[] {
+  const warnings: string[] = [];
+  if (!userId) {
+    warnings.push('userId is empty.');
+    return warnings;
+  }
+  if (userId.includes('@')) {
+    warnings.push(
+      'userId looks like an email — Buzzvil requires a non-PII, stable identifier (not an email/login id); ads may be rejected.'
+    );
+  }
+  if (userId.length > 255) {
+    warnings.push('userId exceeds 255 characters.');
+  }
+  if ([...userId].some((ch) => ch.charCodeAt(0) > 127)) {
+    warnings.push('userId should be ASCII.');
+  }
+  return warnings;
+}
+
 /** Log a user in. Resolves on success, rejects on SDK failure. */
 export function login(user: BuzzvilUser): Promise<void> {
+  if (__DEV__) {
+    for (const message of userIdWarnings(user.userId)) {
+      console.warn(`[buzzvil] login: ${message}`);
+    }
+  }
   return Buzzvil.login(user.userId, user.gender ?? '', user.birthYear ?? 0);
 }
 
