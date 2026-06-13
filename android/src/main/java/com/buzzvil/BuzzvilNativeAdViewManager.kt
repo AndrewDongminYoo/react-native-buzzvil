@@ -51,6 +51,17 @@ class BuzzvilNativeAdViewManager :
       "topRewarded" to mapOf("registrationName" to "onRewarded"),
     )
 
+  // Single load entry point: React applies unitId/layout through separate setters
+  // (store-only), then calls this once after the prop batch settles — so a render
+  // that changes both props triggers exactly one load with the final
+  // (unitId, layout) pair, never an intermediate request for a stale pair, and a
+  // layout-only change rebinds with the new layout instead of being silently
+  // dropped by the unitId-keyed dedup.
+  override fun onAfterUpdateTransaction(view: BuzzvilNativeAdView) {
+    super.onAfterUpdateTransaction(view)
+    view.loadIfReady()
+  }
+
   override fun onDropViewInstance(view: BuzzvilNativeAdView) {
     view.cleanup()
     super.onDropViewInstance(view)
