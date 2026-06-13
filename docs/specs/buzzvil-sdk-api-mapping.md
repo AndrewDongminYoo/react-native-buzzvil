@@ -254,8 +254,8 @@ The TS spec is `src/BuzzFlexAdViewNativeComponent.ts`; the friendly wrapper is `
 | `onClicked`    | `() => void`                     | Fires on ad tap.                                                            |
 
 - FlexAd has a single fixed layout (no size variants, unlike the native ad / BuzzBanner).
-  The ad content is **16:9**, and the total view height is **16:9 + ~41dp/pt** (CTA button + divider, auto-added by the SDK).
-- As with the native ad / BuzzBanner, under Fabric the host frame comes from the JS shadow node (`style`) — give the view an explicit width and a height of `width * 9/16 + 41`, or iOS bounds stay `0` and the ad never loads.
+  The ad content is **16:9**, and the SDK auto-adds **54dp/pt** of fixed chrome below it (a ~20 divider/padding + a 34 CTA button), so the total view height is **`width * 9/16 + 54`**. (Verified against the SDK's own Auto Layout constraints: `media.height == 0.5625*width + 20`, `cta.height == 34`.)
+- As with the native ad / BuzzBanner, under Fabric the host frame comes from the JS shadow node (`style`) — give the view an explicit width and a height of `width * 9/16 + 54`, or iOS bounds stay `0` and the ad never loads. A height that doesn't match the SDK's intrinsic layout logs an Auto Layout constraint conflict (and squishes the CTA).
 - `onFailed.code` is the **NSError code as a string** on iOS (the `message` appends `domain`/`code` for self-describing logs, mirroring BuzzBanner) and the **symbolic `BuzzAdError.Type` name** on Android (mirroring the native ad) — the two platforms intentionally differ here, following each platform's existing convention for their respective error shapes.
 
 ### Native mapping

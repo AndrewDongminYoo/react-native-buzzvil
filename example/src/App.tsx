@@ -357,11 +357,11 @@ const styles = StyleSheet.create({
     width: 320,
     height: 100,
   },
-  // FlexAd content is 16:9; the total view height is ~16:9 + 41 for the CTA +
-  // divider (see docs/specs/buzzvil-sdk-api-mapping.md).
+  // FlexAd content is 16:9; the SDK auto-adds 54 of chrome below (≈20 divider +
+  // 34 CTA), so height = width*9/16 + 54 (see docs/specs/buzzvil-sdk-api-mapping.md).
   flexAd: {
     width: 320,
-    height: 320 * (9 / 16) + 41,
+    height: 320 * (9 / 16) + 54,
   },
   buttonRow: {
     flexDirection: 'row',
