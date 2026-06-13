@@ -14,6 +14,8 @@ import {
 // These come from the Buzzvil admin and are REQUIRED for an ad to load.
 // Replace the placeholders with your real values before running on a device.
 const BUZZVIL_APP_ID = 'YOUR_APP_ID';
+// from Buzzvil admin; required only for BuzzBanner (Android).
+const BUZZVIL_APP_SECRET = 'YOUR_BUZZVIL_APP_SECRET';
 const BUZZVIL_UNIT_ID = 'YOUR_NATIVE_UNIT_ID';
 // Interstitial uses its own unit id, distinct from the native-ad unit above.
 const BUZZVIL_INTERSTITIAL_UNIT_ID = 'YOUR_INTERSTITIAL_UNIT_ID';
@@ -44,7 +46,7 @@ export default function App() {
 
   useEffect(() => {
     // login is required before ads will load.
-    initialize(BUZZVIL_APP_ID);
+    initialize(BUZZVIL_APP_ID, BUZZVIL_APP_SECRET);
     login({
       userId: '9cfe5338-ea71-4208-b622-6ceb0df3d44b',
       gender: 'MALE',

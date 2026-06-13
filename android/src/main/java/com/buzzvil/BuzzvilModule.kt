@@ -9,6 +9,7 @@ import com.facebook.react.bridge.UiThreadUtil
 // The Buzzvil class names and import paths below are verified against the
 // resolved `com.buzzvil:buzzvil-sdk` AAR (buzzvil-bom 6.7.x) — this module
 // compiles cleanly via `:dongminyu_react-native-buzzvil:compileDebugKotlin`.
+import com.buzzvil.buzzbanner.BuzzBanner
 import com.buzzvil.buzzbenefit.BuzzBenefitConfig
 import com.buzzvil.buzzbenefit.benefithub.BuzzBenefitHub
 import com.buzzvil.buzzbenefit.benefithub.BuzzBenefitHubConfig
@@ -23,10 +24,22 @@ import com.buzzvil.sdk.BuzzvilSdkUser
 class BuzzvilModule(
   reactContext: ReactApplicationContext,
 ) : NativeBuzzvilSpec(reactContext) {
-  override fun initialize(appId: String) {
+  override fun initialize(
+    appId: String,
+    appSecret: String,
+  ) {
     val application = reactApplicationContext.applicationContext as Application
     val config = BuzzBenefitConfig.Builder(appId).build()
     BuzzvilSdk.initialize(application, config)
+    // BuzzBanner needs its own init or the banner view emits
+    // onFailed(code="0", "BuzzBanner is not initialized."). The 3-arg init
+    // (appId, appSecret, context) is the full one — it both stores the
+    // credentials and builds the underlying ad SDK (verified via javap on
+    // buzz-banner 6.7.6). Sentinel contract (see NativeBuzzvil.ts): "" appSecret
+    // → skip BuzzBanner init (iOS has no separate banner init at all).
+    if (appSecret.isNotEmpty()) {
+      BuzzBanner().init(appId, appSecret, application)
+    }
   }
 
   override fun login(

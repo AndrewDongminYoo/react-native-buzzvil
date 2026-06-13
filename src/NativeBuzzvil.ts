@@ -35,20 +35,22 @@ type InterstitialClosedEvent = Readonly<{ unitId: string }>;
  */
 export interface Spec extends TurboModule {
   /**
-   * Initialize the BuzzBenefit SDK with the app's Buzzvil app id.
+   * Initialize the BuzzBenefit SDK with the app's Buzzvil app id, and
+   * (Android only) BuzzBanner when an `appSecret` is provided.
    *
    * - iOS: `BuzzBenefit.shared.initialize(with: BuzzBenefitConfig.Builder(appId:).build())`.
-   * - Android: `BuzzvilSdk.initialize(application, BuzzBenefitConfig.Builder(appId).build())`.
+   *   No separate BuzzBanner init exists on iOS, so `appSecret` is ignored.
+   * - Android: `BuzzvilSdk.initialize(application, BuzzBenefitConfig.Builder(appId).build())`,
+   *   then — only when `appSecret` is non-empty — `BuzzBanner().init(appId, appSecret, application)`.
+   *   Without that BuzzBanner call the banner view emits `onFailed(code="0",
+   *   "BuzzBanner is not initialized.")`.
    *
-   * NOTE (verify at native-impl time): the Android SDK initializes with the
-   * `Application` instance and the docs recommend `Application.onCreate()`
-   * timing. JS-driven init must pass `reactContext.applicationContext as
-   * Application` and run before any `login`/`showBenefitHub` call. If the
-   * Android SDK turns out to require manifest/Application-level setup (as the
-   * AdPopcorn wrapper's `setAppKey` does), this becomes iOS-effective with an
-   * Android no-op — confirm against the running SDK before shipping.
+   * @param appSecret BuzzBanner app secret from the Buzzvil admin. Sentinel:
+   *   `''` = not provided → BuzzBanner init is skipped (only needed if using
+   *   BuzzBanner). Both native impls must interpret `''` identically (see the
+   *   sentinel contract above).
    */
-  initialize(appId: string): void;
+  initialize(appId: string, appSecret: string): void;
 
   /**
    * Log a user into the SDK. Resolves on success, rejects on failure.

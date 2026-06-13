@@ -7,9 +7,14 @@ import type { BuzzvilUser, BenefitHubOptions } from './types';
  * the sentinel contract documented in `./NativeBuzzvil`.
  */
 
-/** Initialize the BuzzBenefit SDK. Call once, before any other method. */
-export function initialize(appId: string): void {
-  Buzzvil.initialize(appId);
+/**
+ * Initialize the BuzzBenefit SDK. Call once, before any other method.
+ *
+ * `appSecret` is the BuzzBanner app secret from the Buzzvil admin; it is only
+ * needed when using BuzzBanner (Android). Omit it (sentinel `''`) otherwise.
+ */
+export function initialize(appId: string, appSecret = ''): void {
+  Buzzvil.initialize(appId, appSecret);
 }
 
 /**
