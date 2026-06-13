@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   BuzzBanner,
@@ -43,6 +43,16 @@ const INTERSTITIAL_TYPES: InterstitialType[] = ['dialog', 'bottomSheet'];
 
 const BANNER_SIZES: BannerSize[] = ['W320XH50', 'W320XH100'];
 
+/** A visually distinct, titled card grouping one feature's smoke test. */
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <View style={styles.section}>
+      <Text style={styles.heading}>{title}</Text>
+      {children}
+    </View>
+  );
+}
+
 export default function App() {
   const [layout, setLayout] = useState<BuzzvilNativeAdLayout>('300x250');
   const [interstitialType, setInterstitialType] =
@@ -79,219 +89,234 @@ export default function App() {
   }, []);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.heading}>Buzzvil Native Ad — smoke test</Text>
-
-      <View style={styles.picker}>
-        {LAYOUTS.map((value) => {
-          const selected = value === layout;
-          return (
-            <Pressable
-              key={value}
-              onPress={() => setLayout(value)}
-              style={[styles.chip, selected && styles.chipSelected]}
-            >
-              <Text
-                style={[styles.chipText, selected && styles.chipTextSelected]}
+    <ScrollView style={styles.screen} contentContainerStyle={styles.container}>
+      <Section title="Buzzvil Native Ad — smoke test">
+        <View style={styles.picker}>
+          {LAYOUTS.map((value) => {
+            const selected = value === layout;
+            return (
+              <Pressable
+                key={value}
+                onPress={() => setLayout(value)}
+                style={[styles.chip, selected && styles.chipSelected]}
               >
-                {value}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+                <Text
+                  style={[styles.chipText, selected && styles.chipTextSelected]}
+                >
+                  {value}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
 
-      <View style={styles.adArea}>
-        <BuzzvilNativeAdView
-          // Remount on layout change so a fresh load runs per size.
-          key={layout}
-          unitId={BUZZVIL_UNIT_ID}
-          layout={layout}
-          onAdLoaded={(e) => append(`onAdLoaded {w:${e.width}, h:${e.height}}`)}
-          onAdFailed={(e) =>
-            append(`onAdFailed {code:${e.code}, message:${e.message}}`)
-          }
-          onAdClicked={() => append('onAdClicked')}
-          onImpressed={() => append('onImpressed')}
-          onRewarded={(e) => append(`onRewarded {success:${e.success}}`)}
-        />
-      </View>
+        <View style={styles.adArea}>
+          <BuzzvilNativeAdView
+            // Remount on layout change so a fresh load runs per size.
+            key={layout}
+            unitId={BUZZVIL_UNIT_ID}
+            layout={layout}
+            onAdLoaded={(e) =>
+              append(`onAdLoaded {w:${e.width}, h:${e.height}}`)
+            }
+            onAdFailed={(e) =>
+              append(`onAdFailed {code:${e.code}, message:${e.message}}`)
+            }
+            onAdClicked={() => append('onAdClicked')}
+            onImpressed={() => append('onImpressed')}
+            onRewarded={(e) => append(`onRewarded {success:${e.success}}`)}
+          />
+        </View>
+      </Section>
 
-      <Text style={styles.heading}>Interstitial — smoke test</Text>
-
-      <View style={styles.picker}>
-        {INTERSTITIAL_TYPES.map((value) => {
-          const selected = value === interstitialType;
-          return (
-            <Pressable
-              key={value}
-              onPress={() => setInterstitialType(value)}
-              style={[styles.chip, selected && styles.chipSelected]}
-            >
-              <Text
-                style={[styles.chipText, selected && styles.chipTextSelected]}
+      <Section title="Interstitial — smoke test">
+        <View style={styles.picker}>
+          {INTERSTITIAL_TYPES.map((value) => {
+            const selected = value === interstitialType;
+            return (
+              <Pressable
+                key={value}
+                onPress={() => setInterstitialType(value)}
+                style={[styles.chip, selected && styles.chipSelected]}
               >
-                {value}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+                <Text
+                  style={[styles.chipText, selected && styles.chipTextSelected]}
+                >
+                  {value}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
 
-      <View style={styles.buttonRow}>
-        <Pressable
-          style={styles.button}
-          onPress={() =>
-            loadInterstitial(BUZZVIL_INTERSTITIAL_UNIT_ID, interstitialType)
-              .then(() => append('interstitial loaded'))
-              .catch((e: unknown) =>
-                append(`interstitial load failed: ${String(e)}`)
-              )
-          }
-        >
-          <Text style={styles.buttonText}>Load</Text>
-        </Pressable>
-        <Pressable
-          style={styles.button}
-          onPress={() => {
-            append('interstitial show requested');
-            showInterstitial(BUZZVIL_INTERSTITIAL_UNIT_ID);
-          }}
-        >
-          <Text style={styles.buttonText}>Show</Text>
-        </Pressable>
-      </View>
+        <View style={styles.buttonRow}>
+          <Pressable
+            style={styles.button}
+            onPress={() =>
+              loadInterstitial(BUZZVIL_INTERSTITIAL_UNIT_ID, interstitialType)
+                .then(() => append('interstitial loaded'))
+                .catch((e: unknown) =>
+                  append(`interstitial load failed: ${String(e)}`)
+                )
+            }
+          >
+            <Text style={styles.buttonText}>Load</Text>
+          </Pressable>
+          <Pressable
+            style={styles.button}
+            onPress={() => {
+              append('interstitial show requested');
+              showInterstitial(BUZZVIL_INTERSTITIAL_UNIT_ID);
+            }}
+          >
+            <Text style={styles.buttonText}>Show</Text>
+          </Pressable>
+        </View>
+      </Section>
 
-      <Text style={styles.heading}>BuzzBanner — smoke test</Text>
-
-      <View style={styles.picker}>
-        {BANNER_SIZES.map((value) => {
-          const selected = value === bannerSize;
-          return (
-            <Pressable
-              key={value}
-              onPress={() => setBannerSize(value)}
-              style={[styles.chip, selected && styles.chipSelected]}
-            >
-              <Text
-                style={[styles.chipText, selected && styles.chipTextSelected]}
+      <Section title="BuzzBanner — smoke test">
+        <View style={styles.picker}>
+          {BANNER_SIZES.map((value) => {
+            const selected = value === bannerSize;
+            return (
+              <Pressable
+                key={value}
+                onPress={() => setBannerSize(value)}
+                style={[styles.chip, selected && styles.chipSelected]}
               >
-                {value}
+                <Text
+                  style={[styles.chipText, selected && styles.chipTextSelected]}
+                >
+                  {value}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View style={styles.adArea}>
+          <BuzzBanner
+            // Remount on size change so a fresh load runs per size.
+            key={bannerSize}
+            placementId={BUZZVIL_BANNER_PLACEMENT_ID}
+            size={bannerSize}
+            style={
+              bannerSize === 'W320XH50'
+                ? styles.bannerW320XH50
+                : styles.bannerW320XH100
+            }
+            onLoaded={() => append('banner onLoaded')}
+            onFailed={(e) =>
+              append(`banner onFailed {code:${e.code}, message:${e.message}}`)
+            }
+            onClicked={() => append('banner onClicked')}
+          />
+        </View>
+      </Section>
+
+      <Section title="FlexAd — smoke test">
+        <View style={styles.adArea}>
+          <BuzzFlexAd
+            unitId={BUZZVIL_FLEX_AD_UNIT_ID}
+            style={styles.flexAd}
+            onLoaded={() => append('flexAd onLoaded')}
+            onFailed={(e) =>
+              append(`flexAd onFailed {code:${e.code}, message:${e.message}}`)
+            }
+            onClicked={() => append('flexAd onClicked')}
+          />
+        </View>
+      </Section>
+
+      <Section title="LuckyBox — smoke test">
+        <View style={styles.buttonRow}>
+          <Pressable
+            style={styles.button}
+            onPress={() => {
+              append('luckyBox show requested');
+              showLuckyBox();
+            }}
+          >
+            <Text style={styles.buttonText}>Open LuckyBox</Text>
+          </Pressable>
+        </View>
+      </Section>
+
+      <Section title="EntryPoint — smoke test">
+        <View style={styles.buttonRow}>
+          <Pressable
+            style={styles.button}
+            onPress={() =>
+              loadEntryPoints()
+                .then((types) =>
+                  append(`entryPoints loaded: [${types.join(', ')}]`)
+                )
+                .catch((e: unknown) =>
+                  append(`entryPoints load failed: ${String(e)}`)
+                )
+            }
+          >
+            <Text style={styles.buttonText}>Load</Text>
+          </Pressable>
+          <Pressable
+            style={styles.button}
+            onPress={() => {
+              append('entryPoint popup show requested');
+              showEntryPointPopup();
+            }}
+          >
+            <Text style={styles.buttonText}>Popup</Text>
+          </Pressable>
+          <Pressable
+            style={styles.button}
+            onPress={() => {
+              append('entryPoint bottomSheet show requested');
+              showEntryPointBottomSheet();
+            }}
+          >
+            <Text style={styles.buttonText}>BottomSheet</Text>
+          </Pressable>
+        </View>
+      </Section>
+
+      <Section title="Event log">
+        <ScrollView
+          style={styles.logBox}
+          contentContainerStyle={styles.logContent}
+          nestedScrollEnabled
+        >
+          {log.length === 0 ? (
+            <Text style={styles.logEmpty}>No events yet.</Text>
+          ) : (
+            log.map((line, i) => (
+              <Text key={i} style={styles.logLine}>
+                {line}
               </Text>
-            </Pressable>
-          );
-        })}
-      </View>
-
-      <View style={styles.adArea}>
-        <BuzzBanner
-          // Remount on size change so a fresh load runs per size.
-          key={bannerSize}
-          placementId={BUZZVIL_BANNER_PLACEMENT_ID}
-          size={bannerSize}
-          style={
-            bannerSize === 'W320XH50'
-              ? styles.bannerW320XH50
-              : styles.bannerW320XH100
-          }
-          onLoaded={() => append('banner onLoaded')}
-          onFailed={(e) =>
-            append(`banner onFailed {code:${e.code}, message:${e.message}}`)
-          }
-          onClicked={() => append('banner onClicked')}
-        />
-      </View>
-
-      <Text style={styles.heading}>FlexAd — smoke test</Text>
-
-      <View style={styles.adArea}>
-        <BuzzFlexAd
-          unitId={BUZZVIL_FLEX_AD_UNIT_ID}
-          style={styles.flexAd}
-          onLoaded={() => append('flexAd onLoaded')}
-          onFailed={(e) =>
-            append(`flexAd onFailed {code:${e.code}, message:${e.message}}`)
-          }
-          onClicked={() => append('flexAd onClicked')}
-        />
-      </View>
-
-      <Text style={styles.heading}>LuckyBox — smoke test</Text>
-
-      <View style={styles.buttonRow}>
-        <Pressable
-          style={styles.button}
-          onPress={() => {
-            append('luckyBox show requested');
-            showLuckyBox();
-          }}
-        >
-          <Text style={styles.buttonText}>Open LuckyBox</Text>
-        </Pressable>
-      </View>
-
-      <Text style={styles.heading}>EntryPoint — smoke test</Text>
-
-      <View style={styles.buttonRow}>
-        <Pressable
-          style={styles.button}
-          onPress={() =>
-            loadEntryPoints()
-              .then((types) =>
-                append(`entryPoints loaded: [${types.join(', ')}]`)
-              )
-              .catch((e: unknown) =>
-                append(`entryPoints load failed: ${String(e)}`)
-              )
-          }
-        >
-          <Text style={styles.buttonText}>Load</Text>
-        </Pressable>
-        <Pressable
-          style={styles.button}
-          onPress={() => {
-            append('entryPoint popup show requested');
-            showEntryPointPopup();
-          }}
-        >
-          <Text style={styles.buttonText}>Popup</Text>
-        </Pressable>
-        <Pressable
-          style={styles.button}
-          onPress={() => {
-            append('entryPoint bottomSheet show requested');
-            showEntryPointBottomSheet();
-          }}
-        >
-          <Text style={styles.buttonText}>BottomSheet</Text>
-        </Pressable>
-      </View>
-
-      <Text style={styles.heading}>Event log</Text>
-      <ScrollView
-        style={styles.logBox}
-        contentContainerStyle={styles.logContent}
-      >
-        {log.length === 0 ? (
-          <Text style={styles.logEmpty}>No events yet.</Text>
-        ) : (
-          log.map((line, i) => (
-            <Text key={i} style={styles.logLine}>
-              {line}
-            </Text>
-          ))
-        )}
-      </ScrollView>
-    </View>
+            ))
+          )}
+        </ScrollView>
+      </Section>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
+  },
+  container: {
     paddingTop: 64,
     paddingHorizontal: 16,
-    gap: 12,
+    paddingBottom: 32,
+    gap: 16,
+  },
+  section: {
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
+    padding: 12,
+    gap: 10,
+    backgroundColor: '#fafafa',
   },
   heading: {
     fontSize: 16,
@@ -353,10 +378,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   logBox: {
-    flex: 1,
+    // Fixed height (not flex) so the log scrolls independently inside the
+    // outer page ScrollView instead of collapsing to zero height.
+    height: 200,
     borderWidth: 1,
     borderColor: '#ddd',
     borderRadius: 8,
+    backgroundColor: '#fff',
   },
   logContent: {
     padding: 8,
