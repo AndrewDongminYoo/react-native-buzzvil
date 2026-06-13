@@ -28,7 +28,9 @@ import com.buzzvil.buzzbenefit.buzznative.BuzzNativeAdView as BuzzAdView
 import com.buzzvil.buzzbenefit.buzznative.BuzzNativeViewBinder
 import com.buzzvil.buzzbenefit.buzznative.BuzzRewardResult
 
-class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
+class BuzzvilNativeAdView(
+  context: ThemedReactContext,
+) : FrameLayout(context) {
   // Plain private fields + explicit setters. Do NOT use `var x; private set` —
   // its generated setX(String) would clash with the fun setX(String) below.
   private var unitId: String? = null
@@ -101,7 +103,10 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
           // No matching JS event.
         }
 
-        override fun onRewarded(ad: BuzzNativeAd, result: BuzzRewardResult) {
+        override fun onRewarded(
+          ad: BuzzNativeAd,
+          result: BuzzRewardResult,
+        ) {
           val payload = Arguments.createMap()
           payload.putBoolean("success", result == BuzzRewardResult.SUCCESS)
           emit("topRewarded", payload)
@@ -156,19 +161,22 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
     }
 
   private fun bindLoadedAd(buzz: BuzzNative) {
-    val adView = LayoutInflater.from(context)
-      .inflate(layoutResFor(layoutVariant), this, false) as BuzzAdView
+    val adView =
+      LayoutInflater
+        .from(context)
+        .inflate(layoutResFor(layoutVariant), this, false) as BuzzAdView
     removeAllViews()
     addView(adView)
 
     // Pin the host to the inventory-box height (px from dp); width stays from style.
     val density = resources.displayMetrics.density
     val heightPx = (heightDpFor(layoutVariant) * density).toInt()
-    layoutParams = (
-      layoutParams ?: FrameLayout.LayoutParams(
-        ViewGroup.LayoutParams.MATCH_PARENT,
-        heightPx,
-      )
+    layoutParams =
+      (
+        layoutParams ?: FrameLayout.LayoutParams(
+          ViewGroup.LayoutParams.MATCH_PARENT,
+          heightPx,
+        )
       ).apply { height = heightPx }
 
     val media = adView.findViewById<BuzzMediaView>(R.id.buzz_media)
@@ -177,14 +185,16 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
     val desc = adView.findViewById<TextView>(R.id.buzz_desc)
     val cta = adView.findViewById<DefaultBuzzCtaView>(R.id.buzz_cta)
 
-    binder = BuzzNativeViewBinder.Builder()
-      .buzzNativeAdView(adView)
-      .buzzMediaView(media)
-      .iconImageView(icon)
-      .titleTextView(title)
-      .descriptionTextView(desc)
-      .buzzCtaView(cta)
-      .build()
+    binder =
+      BuzzNativeViewBinder
+        .Builder()
+        .buzzNativeAdView(adView)
+        .buzzMediaView(media)
+        .iconImageView(icon)
+        .titleTextView(title)
+        .descriptionTextView(desc)
+        .buzzCtaView(cta)
+        .build()
     // bind() takes the BuzzNative loader, not the loaded BuzzNativeAd.
     binder?.bind(buzz)
 
@@ -205,7 +215,10 @@ class BuzzvilNativeAdView(context: ThemedReactContext) : FrameLayout(context) {
     }
   }
 
-  private fun emit(eventName: String, payload: WritableMap) {
+  private fun emit(
+    eventName: String,
+    payload: WritableMap,
+  ) {
     val reactContext = context as ReactContext
     val surfaceId = UIManagerHelper.getSurfaceId(reactContext)
     val dispatcher = UIManagerHelper.getEventDispatcherForReactTag(reactContext, id) ?: return

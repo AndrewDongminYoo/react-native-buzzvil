@@ -18,25 +18,25 @@ class BuzzvilNativeAdViewManager :
     mDelegate = BuzzvilNativeAdViewManagerDelegate(this)
   }
 
-  override fun getDelegate(): ViewManagerDelegate<BuzzvilNativeAdView>? {
-    return mDelegate
-  }
+  override fun getDelegate(): ViewManagerDelegate<BuzzvilNativeAdView>? = mDelegate
 
-  override fun getName(): String {
-    return NAME
-  }
+  override fun getName(): String = NAME
 
-  public override fun createViewInstance(context: ThemedReactContext): BuzzvilNativeAdView {
-    return BuzzvilNativeAdView(context)
-  }
+  public override fun createViewInstance(context: ThemedReactContext): BuzzvilNativeAdView = BuzzvilNativeAdView(context)
 
   @ReactProp(name = "unitId")
-  override fun setUnitId(view: BuzzvilNativeAdView, value: String?) {
+  override fun setUnitId(
+    view: BuzzvilNativeAdView,
+    value: String?,
+  ) {
     view.setUnitId(value ?: "")
   }
 
   @ReactProp(name = "layout")
-  override fun setLayout(view: BuzzvilNativeAdView, value: String?) {
+  override fun setLayout(
+    view: BuzzvilNativeAdView,
+    value: String?,
+  ) {
     view.setLayoutVariant(value ?: "300x250")
   }
 
