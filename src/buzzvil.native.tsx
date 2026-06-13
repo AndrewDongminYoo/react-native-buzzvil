@@ -66,5 +66,14 @@ export function isLoggedIn(): Promise<boolean> {
 
 /** Present the BenefitHub (offerwall) over the current screen. */
 export function showBenefitHub(options: BenefitHubOptions = {}): void {
-  Buzzvil.showBenefitHub(options.routePath ?? '', options.showHistory ?? false);
+  Buzzvil.showBenefitHub(
+    options.routePath ?? '',
+    options.showHistory ?? false,
+    options.page ?? ''
+  );
+}
+
+/** Open BenefitHub directly on the LuckyBox page. */
+export function showLuckyBox(): void {
+  showBenefitHub({ page: 'luckyBox' });
 }
