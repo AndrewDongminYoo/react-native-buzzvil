@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "@dongminyu/react-native-buzzvil": ["./src/index"]
+      "react-native-buzzvil-ad": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

@@ -1,7 +1,7 @@
 {
-  "name": "@dongminyu/react-native-buzzvil",
+  "name": "react-native-buzzvil-ad",
   "version": "0.1.0",
-  "description": "Get started with effective app monetization using the integration guide and API reference provided by Buzzvil, the No. 1 mobile app rewards advertising platform.",
+  "description": "Unofficial, community-maintained React Native wrapper for the Buzzvil BuzzBenefit SDK (Android & iOS). Not affiliated with, endorsed by, or supported by Buzzvil.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
   "exports": {

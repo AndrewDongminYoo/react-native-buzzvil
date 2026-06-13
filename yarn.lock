@@ -1536,37 +1536,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@dongminyu/react-native-buzzvil@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "@dongminyu/react-native-buzzvil@workspace:."
-  dependencies:
-    "@eslint/compat": "npm:^2.1.0"
-    "@eslint/eslintrc": "npm:^3.3.5"
-    "@eslint/js": "npm:^10.0.1"
-    "@jest/globals": "npm:^30.0.0"
-    "@react-native/babel-preset": "npm:0.85.0"
-    "@react-native/eslint-config": "npm:0.85.0"
-    "@react-native/jest-preset": "npm:0.85.0"
-    "@types/react": "npm:^19.2.0"
-    del-cli: "npm:^7.0.0"
-    eslint: "npm:^9.39.4"
-    eslint-config-prettier: "npm:^10.1.8"
-    eslint-plugin-ft-flow: "npm:^3.0.11"
-    eslint-plugin-prettier: "npm:^5.5.6"
-    jest: "npm:^30.3.0"
-    prettier: "npm:^3.8.3"
-    react: "npm:19.2.3"
-    react-native: "npm:0.85.0"
-    react-native-builder-bob: "npm:^0.42.1"
-    react-native-web: "npm:~0.21.2"
-    turbo: "npm:^2.9.16"
-    typescript: "npm:^6.0.3"
-  peerDependencies:
-    react: "*"
-    react-native: "*"
-  languageName: unknown
-  linkType: soft
-
 "@emnapi/core@npm:1.10.0":
   version: 1.10.0
   resolution: "@emnapi/core@npm:1.10.0"
@@ -8910,6 +8879,37 @@ __metadata:
   checksum: 10c0/9d4eb9097eef8e204ffb1ab8c861e90c8b8b6bfc5f4cb86388d1015322fb205c3c8a08db19cd6803f2505ebba9311a7186949e2023f434d097c6e026e7fd013f
   languageName: node
   linkType: hard
+
+"react-native-buzzvil-ad@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "react-native-buzzvil-ad@workspace:."
+  dependencies:
+    "@eslint/compat": "npm:^2.1.0"
+    "@eslint/eslintrc": "npm:^3.3.5"
+    "@eslint/js": "npm:^10.0.1"
+    "@jest/globals": "npm:^30.0.0"
+    "@react-native/babel-preset": "npm:0.85.0"
+    "@react-native/eslint-config": "npm:0.85.0"
+    "@react-native/jest-preset": "npm:0.85.0"
+    "@types/react": "npm:^19.2.0"
+    del-cli: "npm:^7.0.0"
+    eslint: "npm:^9.39.4"
+    eslint-config-prettier: "npm:^10.1.8"
+    eslint-plugin-ft-flow: "npm:^3.0.11"
+    eslint-plugin-prettier: "npm:^5.5.6"
+    jest: "npm:^30.3.0"
+    prettier: "npm:^3.8.3"
+    react: "npm:19.2.3"
+    react-native: "npm:0.85.0"
+    react-native-builder-bob: "npm:^0.42.1"
+    react-native-web: "npm:~0.21.2"
+    turbo: "npm:^2.9.16"
+    typescript: "npm:^6.0.3"
+  peerDependencies:
+    react: "*"
+    react-native: "*"
+  languageName: unknown
+  linkType: soft
 
 "react-native-buzzvil-example@workspace:example":
   version: 0.0.0-use.local

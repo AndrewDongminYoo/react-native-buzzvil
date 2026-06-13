@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-A React Native **Turbo Module** package (`@dongminyu/react-native-buzzvil`) that wraps Buzzvil's
+A React Native **Turbo Module** package (`react-native-buzzvil-ad`) that wraps Buzzvil's
 **BuzzBenefit v6** native SDKs so they can be used from a React Native app:
 
 - Android: https://docs.buzzvil.com/docs/buzzbenefit-android/v6/introduction

@@ -5,7 +5,7 @@ import {
   initialize,
   login,
   type BuzzvilNativeAdLayout,
-} from '@dongminyu/react-native-buzzvil';
+} from 'react-native-buzzvil-ad';
 
 // These come from the Buzzvil admin and are REQUIRED for an ad to load.
 // Replace the placeholders with your real values before running on a device.
