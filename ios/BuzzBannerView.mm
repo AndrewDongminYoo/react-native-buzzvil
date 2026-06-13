@@ -95,6 +95,21 @@ using namespace facebook::react;
   [_host requestAdWithPlacementId:placementId size:size rootViewController:presenter];
 }
 
+#pragma mark - Lifecycle
+
+// iOS only calls updateProps on prop CHANGES, so if the presenter was nil at
+// config time (loadIfReady cleared its guard) and props don't change again, the
+// banner would never load. Mirror Android's prop-independent onAttachedToWindow:
+// retry once the view is in a window. loadIfReady guards on the (id,size) key
+// (no double-load) and on an empty placementId, so this is a safe retry.
+- (void)didMoveToWindow
+{
+  [super didMoveToWindow];
+  if (self.window != nil) {
+    [self loadIfReady];
+  }
+}
+
 #pragma mark - Event emitter
 
 - (const BuzzBannerViewEventEmitter &)eventEmitterRef

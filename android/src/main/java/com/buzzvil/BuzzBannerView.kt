@@ -120,7 +120,15 @@ class BuzzBannerView(
       },
     )
 
-    addView(sdkBanner)
+    // Pin the SDK banner to fill the host (mirrors iOS); default WRAP_CONTENT
+    // would let the child collapse independently of the RN-driven host frame.
+    addView(
+      sdkBanner,
+      FrameLayout.LayoutParams(
+        FrameLayout.LayoutParams.MATCH_PARENT,
+        FrameLayout.LayoutParams.MATCH_PARENT,
+      ),
+    )
 
     // LIFECYCLE GUARD: the banner needs Activity lifecycle to load and to stop
     // background impressions. RN's addLifecycleEventListener does NOT replay the

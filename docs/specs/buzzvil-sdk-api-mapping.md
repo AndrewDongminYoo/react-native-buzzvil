@@ -12,9 +12,8 @@ Source docs:
 ## v1 surface (implemented in the spec)
 
 Scope is the **common, foundational** surface only: initialize → login →
-present BenefitHub. Feature-specific inventory (Native, Interstitial,
-BuzzBanner, FlexAd, Pop, LuckyBox) is deferred until the PRD defines which are
-used.
+present BenefitHub. Feature-specific inventory (FlexAd, Pop/EntryPoint,
+LuckyBox) is deferred until the PRD defines which are used.
 
 | Bridge method (`Spec`)                      | Android (`BuzzvilSdk` / `BuzzBenefitHub`)                                                                     | iOS (`BuzzBenefit.shared` / `BuzzBenefitHub`)                                                      |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
