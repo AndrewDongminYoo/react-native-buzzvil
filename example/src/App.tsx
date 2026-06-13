@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   BuzzBanner,
+  BuzzFlexAd,
   BuzzvilNativeAdView,
   addInterstitialClosedListener,
   initialize,
@@ -23,6 +24,8 @@ const BUZZVIL_UNIT_ID = 'YOUR_NATIVE_UNIT_ID';
 const BUZZVIL_INTERSTITIAL_UNIT_ID = 'YOUR_INTERSTITIAL_UNIT_ID';
 // BuzzBanner placement id from the Buzzvil admin (distinct from the unit ids above).
 const BUZZVIL_BANNER_PLACEMENT_ID = 'YOUR_BANNER_PLACEMENT_ID';
+// FlexAd uses its own unit id, distinct from the unit ids above.
+const BUZZVIL_FLEX_AD_UNIT_ID = 'YOUR_FLEX_AD_UNIT_ID';
 
 const LAYOUTS: BuzzvilNativeAdLayout[] = [
   '320x50',
@@ -195,6 +198,20 @@ export default function App() {
         />
       </View>
 
+      <Text style={styles.heading}>FlexAd — smoke test</Text>
+
+      <View style={styles.adArea}>
+        <BuzzFlexAd
+          unitId={BUZZVIL_FLEX_AD_UNIT_ID}
+          style={styles.flexAd}
+          onLoaded={() => append('flexAd onLoaded')}
+          onFailed={(e) =>
+            append(`flexAd onFailed {code:${e.code}, message:${e.message}}`)
+          }
+          onClicked={() => append('flexAd onClicked')}
+        />
+      </View>
+
       <Text style={styles.heading}>Event log</Text>
       <ScrollView
         style={styles.logBox}
@@ -259,6 +276,12 @@ const styles = StyleSheet.create({
   bannerW320XH100: {
     width: 320,
     height: 100,
+  },
+  // FlexAd content is 16:9; the total view height is ~16:9 + 41 for the CTA +
+  // divider (see docs/specs/buzzvil-sdk-api-mapping.md).
+  flexAd: {
+    width: 320,
+    height: 320 * (9 / 16) + 41,
   },
   buttonRow: {
     flexDirection: 'row',

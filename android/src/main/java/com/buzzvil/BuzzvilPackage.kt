@@ -9,7 +9,7 @@ import com.facebook.react.uimanager.ViewManager
 
 class BuzzvilPackage : BaseReactPackage() {
   override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> =
-    listOf(BuzzvilNativeAdViewManager(), BuzzBannerViewManager())
+    listOf(BuzzvilNativeAdViewManager(), BuzzBannerViewManager(), BuzzFlexAdViewManager())
 
   override fun getModule(
     name: String,

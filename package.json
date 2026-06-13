@@ -133,6 +133,9 @@
         },
         "BuzzBannerView": {
           "className": "BuzzBannerView"
+        },
+        "BuzzFlexAdView": {
+          "className": "BuzzFlexAdView"
         }
       }
     }

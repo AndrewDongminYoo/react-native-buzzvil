@@ -51,6 +51,16 @@ export interface BuzzBannerProps {
   onClicked?: () => void;
 }
 
+/** Friendly props for the `BuzzFlexAdView` Fabric component. */
+export interface BuzzFlexAdProps {
+  unitId: string;
+  primaryColor?: import('react-native').ColorValue;
+  style?: import('react-native').StyleProp<import('react-native').ViewStyle>;
+  onLoaded?: () => void;
+  onFailed?: (e: { code: string; message: string }) => void;
+  onClicked?: () => void;
+}
+
 /** Friendly props for the `BuzzvilNativeAdView` Fabric component. */
 export interface BuzzvilNativeAdViewProps {
   unitId: string;

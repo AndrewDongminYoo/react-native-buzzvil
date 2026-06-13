@@ -15,6 +15,9 @@ Pod::Spec.new do |s|
 
   s.source_files = "ios/**/*.{h,m,mm,swift,cpp}"
   s.private_header_files = "ios/**/*.h"
+  # BuzzFlexAdShim.swift is the first Swift file in this pod; CocoaPods
+  # requires an explicit Swift version when Swift sources are present.
+  s.swift_version = "5.0"
 
   s.dependency   "BuzzvilSDK", "~> 6.7.5"
   # Buzzvil.mm imports <BuzzAdBenefitSDK/BuzzAdBenefitSDK-Swift.h> directly for
