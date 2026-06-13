@@ -86,6 +86,23 @@
   });
 }
 
+#pragma mark - Interstitial (Task 1 stubs — real SDK wiring lands in Tasks 2–3)
+
+- (void)loadInterstitial:(NSString *)unitId
+                    type:(NSString *)type
+                 resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject
+{
+  // STUB: no BuzzInterstitial yet. Reject so callers don't await a never-loaded
+  // ad. Replaced by the real load (BuzzInterstitial(unitId:type:) → load()).
+  reject(@"buzzvil_not_implemented", @"loadInterstitial is not implemented yet.", nil);
+}
+
+- (void)showInterstitial:(NSString *)unitId
+{
+  // STUB: no-op until the instance map + present(on:) lands.
+}
+
 - (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
     (const facebook::react::ObjCTurboModule::InitParams &)params
 {

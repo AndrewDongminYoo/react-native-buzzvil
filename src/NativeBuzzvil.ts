@@ -1,4 +1,12 @@
 import { TurboModuleRegistry, type TurboModule } from 'react-native';
+import type { CodegenTypes } from 'react-native';
+
+/**
+ * Payload for the interstitial "closed" event. Flat primitive (codegen events
+ * cannot carry nested objects); `unitId` identifies which placement closed so
+ * the JS wrapper can route the callback to the right listener.
+ */
+type InterstitialClosedEvent = Readonly<{ unitId: string }>;
 
 /**
  * TurboModule spec for the native `Buzzvil` module — a thin bridge over
@@ -71,6 +79,47 @@ export interface Spec extends TurboModule {
    * See the sentinel contract above for `routePath` / `showHistory`.
    */
   showBenefitHub(routePath: string, showHistory: boolean): void;
+
+  /**
+   * Load an interstitial ad for `unitId`. Resolves when the ad has loaded
+   * (Android `onAdLoaded` / iOS `BuzzInterstitialDidLoadAd`), rejects on
+   * load failure (`onAdLoadFailed` / `DidFail(toLoadAd:)`).
+   *
+   * The native side holds one `BuzzInterstitial` instance per `unitId` (see
+   * design Decision 1: a `unitId`-keyed map), so a later `showInterstitial`
+   * presents this loaded instance.
+   *
+   * @param unitId Interstitial ad unit id from the Buzzvil admin.
+   * @param type `'dialog'` or `'bottomSheet'` — selects the native build
+   *   variant (`buildDialog()` / `buildBottomSheet()`). Carried as a plain
+   *   string (no codegen enums); the friendly `InterstitialType` union and the
+   *   `'dialog'` default live in the JS wrapper (`./interstitial.native.tsx`).
+   */
+  loadInterstitial(unitId: string, type: string): Promise<void>;
+
+  /**
+   * Present the interstitial instance previously loaded for `unitId`. No-op if
+   * nothing is loaded. UI work — runs on the main thread (parity with
+   * `showBenefitHub`).
+   */
+  showInterstitial(unitId: string): void;
+
+  /**
+   * Fires when an interstitial is dismissed (Android `onAdClosed` / iOS
+   * `BuzzInterstitialDidDismiss`). The payload's `unitId` identifies which
+   * placement closed; the JS wrapper filters by it so each
+   * `addInterstitialClosedListener(unitId, …)` only fires for its own unit.
+   *
+   * Uses a codegen typed `EventEmitter` (RN New-Architecture event member):
+   * codegen generates a concrete `emitOnInterstitialClosed` on the native spec
+   * base class, so the native impl emits via that — no manual
+   * `addListener`/`removeListeners` plumbing. Imported as
+   * `CodegenTypes.EventEmitter` (the runtime `EventEmitter` exported from
+   * `react-native` is a class, not this type); codegen matches by the bare
+   * type name `EventEmitter`, so the `CodegenTypes.`-qualified form is
+   * recognized identically.
+   */
+  readonly onInterstitialClosed: CodegenTypes.EventEmitter<InterstitialClosedEvent>;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('Buzzvil');

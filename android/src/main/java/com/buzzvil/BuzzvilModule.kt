@@ -84,6 +84,23 @@ class BuzzvilModule(
     }
   }
 
+  // --- Interstitial (Task 1 stubs — real SDK wiring lands in Tasks 2–3) ---
+
+  override fun loadInterstitial(
+    unitId: String,
+    type: String,
+    promise: Promise,
+  ) {
+    // STUB: no BuzzInterstitial instance map yet. Reject so callers don't await
+    // a never-loaded ad. Replaced by Builder(unitId).buildDialog()/.buildBottomSheet()
+    // → load(listener) → onAdLoaded/onAdLoadFailed.
+    promise.reject("buzzvil_not_implemented", "loadInterstitial is not implemented yet.")
+  }
+
+  override fun showInterstitial(unitId: String) {
+    // STUB: no-op until the instance map + show(activity) lands.
+  }
+
   companion object {
     const val NAME = NativeBuzzvilSpec.NAME
   }
