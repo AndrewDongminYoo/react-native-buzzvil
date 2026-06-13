@@ -24,13 +24,22 @@ export default function App() {
   const [layout, setLayout] = useState<BuzzvilNativeAdLayout>('300x250');
   const [log, setLog] = useState<string[]>([]);
 
-  const append = (line: string) =>
-    setLog((prev) => [...prev, `${new Date().toLocaleTimeString()}  ${line}`]);
+  const append = (line: string) => {
+    console.debug(line);
+    return setLog((prev) => [
+      ...prev,
+      `${new Date().toLocaleTimeString()}  ${line}`,
+    ]);
+  };
 
   useEffect(() => {
     // login is required before ads will load.
     initialize(BUZZVIL_APP_ID);
-    login({ userId: 'smoke-test-user' })
+    login({
+      userId: '9cfe5338-ea71-4208-b622-6ceb0df3d44b',
+      gender: 'MALE',
+      birthYear: 1994,
+    })
       .then(() => append('login ok'))
       .catch((e: unknown) => append(`login failed: ${String(e)}`));
   }, []);
