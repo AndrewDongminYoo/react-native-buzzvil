@@ -1,6 +1,7 @@
 package com.buzzvil
 
 import android.app.Application
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.UiThreadUtil
@@ -12,6 +13,9 @@ import com.buzzvil.buzzbenefit.BuzzBenefitConfig
 import com.buzzvil.buzzbenefit.benefithub.BuzzBenefitHub
 import com.buzzvil.buzzbenefit.benefithub.BuzzBenefitHubConfig
 import com.buzzvil.buzzbenefit.benefithub.BuzzBenefitHubPage
+import com.buzzvil.buzzbenefit.BuzzAdError
+import com.buzzvil.buzzbenefit.interstitial.BuzzInterstitial
+import com.buzzvil.buzzbenefit.interstitial.BuzzInterstitialListener
 import com.buzzvil.sdk.BuzzvilSdk
 import com.buzzvil.sdk.BuzzvilSdkLoginListener
 import com.buzzvil.sdk.BuzzvilSdkUser
@@ -84,21 +88,67 @@ class BuzzvilModule(
     }
   }
 
-  // --- Interstitial (Task 1 stubs — real SDK wiring lands in Tasks 2–3) ---
+  // --- Interstitial ---
+
+  // Design Decision 1: one BuzzInterstitial instance per unitId, so a later
+  // showInterstitial(unitId) presents the instance loaded by loadInterstitial.
+  private val interstitials = mutableMapOf<String, BuzzInterstitial>()
 
   override fun loadInterstitial(
     unitId: String,
     type: String,
     promise: Promise,
   ) {
-    // STUB: no BuzzInterstitial instance map yet. Reject so callers don't await
-    // a never-loaded ad. Replaced by Builder(unitId).buildDialog()/.buildBottomSheet()
-    // → load(listener) → onAdLoaded/onAdLoadFailed.
-    promise.reject("buzzvil_not_implemented", "loadInterstitial is not implemented yet.")
+    // type sentinel: "bottomSheet" → bottom sheet; "dialog"/""/unknown → dialog.
+    val builder = BuzzInterstitial.Builder(unitId)
+    val interstitial =
+      if (type == "bottomSheet") builder.buildBottomSheet() else builder.buildDialog()
+    if (interstitial == null) {
+      promise.reject(
+        "buzzvil_interstitial_load_failed",
+        "Failed to build a BuzzInterstitial for unitId=$unitId.",
+      )
+      return
+    }
+    interstitials[unitId] = interstitial
+
+    // The SDK listener can fire repeatedly; settle the promise exactly once.
+    var settled = false
+    interstitial.load(
+      object : BuzzInterstitialListener() {
+        override fun onAdLoaded() {
+          if (settled) return
+          settled = true
+          promise.resolve(null)
+        }
+
+        override fun onAdLoadFailed(error: BuzzAdError?) {
+          if (settled) return
+          settled = true
+          interstitials.remove(unitId)
+          promise.reject(
+            "buzzvil_interstitial_load_failed",
+            error?.message ?: error?.type?.toString() ?: "Interstitial load failed.",
+          )
+        }
+
+        override fun onAdClosed() {
+          // New-Arch typed EventEmitter: codegen generates this concrete emit
+          // method on the spec base; payload is a flat primitive map.
+          emitOnInterstitialClosed(Arguments.createMap().apply { putString("unitId", unitId) })
+          // Lifecycle: drop the dismissed instance so the map doesn't retain it.
+          interstitials.remove(unitId)
+        }
+      },
+    )
   }
 
   override fun showInterstitial(unitId: String) {
-    // STUB: no-op until the instance map + show(activity) lands.
+    // show() presents UI — must run on the main thread (parity with BenefitHub).
+    UiThreadUtil.runOnUiThread {
+      val activity = currentActivity ?: return@runOnUiThread
+      interstitials[unitId]?.show(activity)
+    }
   }
 
   companion object {
