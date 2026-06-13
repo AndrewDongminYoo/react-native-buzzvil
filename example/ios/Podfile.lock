@@ -6,7 +6,7 @@ PODS:
   - BuzzAvatyeAdCash (6.7.5):
     - AvatyeAdCash (~> 3.4.2)
     - BuzzAdBenefitSDK (= 6.7.5)
-  - Buzzvil (0.2.0):
+  - Buzzvil (0.3.0):
     - BuzzAdBenefitSDK (~> 6.7.5)
     - BuzzvilSDK (~> 6.7.5)
     - hermes-engine
@@ -2027,7 +2027,7 @@ SPEC CHECKSUMS:
   AvatyeAdCash: feee179adf2811beb35e0917d8eef6efd59b08a6
   BuzzAdBenefitSDK: cf78c31eabc8ef58625d7bb5d1418cde0211fdb4
   BuzzAvatyeAdCash: 683a6f972f631a9c8ace026206e0a2e7580b5616
-  Buzzvil: 5f072b62c16146bb5864c74aecbae5c6eeb3b57a
+  Buzzvil: 06927cb0029fcc9ba61ac7fe9b64b4e37fe03a61
   BuzzvilSDK: 559b0a1b645a75cf2d03fe60fa4379aa66e4f300
   FBLazyVector: c00c20551d40126351a6783c47ce75f5b374851b
   hermes-engine: 6439af91722c8e16f63de5143223376e291eb4be

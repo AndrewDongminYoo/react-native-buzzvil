@@ -1,6 +1,6 @@
 {
   "name": "react-native-buzzvil-ad",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Unofficial, community-maintained React Native wrapper for the Buzzvil BuzzBenefit SDK (Android & iOS). Not affiliated with, endorsed by, or supported by Buzzvil.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
