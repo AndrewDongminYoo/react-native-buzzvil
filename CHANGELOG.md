@@ -8,6 +8,34 @@ All notable changes to this project are documented here. The format follows
 > **Unofficial package.** `react-native-buzzvil-ad` is community-maintained and
 > is **not** affiliated with, endorsed by, or supported by Buzzvil.
 
+## 0.3.0 (2026-06-13)
+
+### Features
+
+- **banner:** add Buzzvil BuzzBenefit v6 **BuzzBanner** (embedded, non-rewarded)
+  as the `BuzzBanner` Fabric component on Android & iOS — `placementId`, `size`
+  (`W320XH50` / `W320XH100`), and `onLoaded` / `onFailed({ code, message })` /
+  `onClicked` events. Android drives the SDK banner through the RN host lifecycle
+  (`onResume` / `onPause` / `onDestroy`); iOS hosts the SDK banner via an isolated
+  host view and configures it against the presented root view controller. (#7)
+- **android:** `initialize(appId, appSecret)` now also initializes BuzzBanner on
+  Android via `BuzzBanner().init(appId, appSecret, context)`. `appSecret` is
+  optional (rep-provisioned, required only for BuzzBanner) and ignored on iOS. (#7)
+- **example:** add a BuzzBanner smoke-test section (size toggle, event log). (#7)
+
+### Bug Fixes
+
+- **banner:** include the SDK error domain (iOS) and code in the `onFailed`
+  `message`, so terse SDK descriptions (e.g. iOS `"exception"`) are
+  self-describing in logs; the numeric `code` field is unchanged. (#7)
+- **android:** defer the banner load to the view manager's
+  `onAfterUpdateTransaction`, so a render that changes both `placementId` and
+  `size` issues a single ad request with the final pair instead of an
+  intermediate request for a stale (placementId, size) combination. (#7)
+- **ios:** gate the banner load on window attachment and retry from
+  `didMoveToWindow`, mirroring Android's lifecycle guard — requesting an ad
+  before the view has a frame could fire impressions against a zero-size view. (#7)
+
 ## 0.2.0 (2026-06-13)
 
 ### Features
