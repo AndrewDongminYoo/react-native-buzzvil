@@ -68,9 +68,15 @@ describe('buzzvil native wrapper — sentinel mapping', () => {
   it('forwards initialize/logout/isLoggedIn verbatim', async () => {
     initialize('app-id');
     logout();
-    expect(native.initialize).toHaveBeenCalledWith('app-id');
+    // appSecret defaults to the '' sentinel when omitted.
+    expect(native.initialize).toHaveBeenCalledWith('app-id', '');
     expect(native.logout).toHaveBeenCalledTimes(1);
     await expect(isLoggedIn()).resolves.toBe(true);
+  });
+
+  it('passes through a provided appSecret', () => {
+    initialize('app-id', 'secret');
+    expect(native.initialize).toHaveBeenCalledWith('app-id', 'secret');
   });
 
   it('encodes omitted gender/birthYear as sentinels', () => {

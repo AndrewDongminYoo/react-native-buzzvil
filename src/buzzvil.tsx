@@ -8,7 +8,7 @@ import type { BuzzvilUser, BenefitHubOptions } from './types';
 
 const UNSUPPORTED = 'react-native-buzzvil is not supported on web.';
 
-export function initialize(_appId: string): void {
+export function initialize(_appId: string, _appSecret?: string): void {
   throw new Error(UNSUPPORTED);
 }
 

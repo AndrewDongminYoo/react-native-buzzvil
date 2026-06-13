@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
+  BuzzBanner,
   BuzzvilNativeAdView,
   addInterstitialClosedListener,
   initialize,
   loadInterstitial,
   login,
   showInterstitial,
+  type BannerSize,
   type BuzzvilNativeAdLayout,
   type InterstitialType,
 } from 'react-native-buzzvil-ad';
@@ -14,9 +16,13 @@ import {
 // These come from the Buzzvil admin and are REQUIRED for an ad to load.
 // Replace the placeholders with your real values before running on a device.
 const BUZZVIL_APP_ID = 'YOUR_APP_ID';
+// from Buzzvil admin; required only for BuzzBanner (Android).
+const BUZZVIL_APP_SECRET = 'YOUR_BUZZVIL_APP_SECRET';
 const BUZZVIL_UNIT_ID = 'YOUR_NATIVE_UNIT_ID';
 // Interstitial uses its own unit id, distinct from the native-ad unit above.
 const BUZZVIL_INTERSTITIAL_UNIT_ID = 'YOUR_INTERSTITIAL_UNIT_ID';
+// BuzzBanner placement id from the Buzzvil admin (distinct from the unit ids above).
+const BUZZVIL_BANNER_PLACEMENT_ID = 'YOUR_BANNER_PLACEMENT_ID';
 
 const LAYOUTS: BuzzvilNativeAdLayout[] = [
   '320x50',
@@ -28,10 +34,13 @@ const LAYOUTS: BuzzvilNativeAdLayout[] = [
 
 const INTERSTITIAL_TYPES: InterstitialType[] = ['dialog', 'bottomSheet'];
 
+const BANNER_SIZES: BannerSize[] = ['W320XH50', 'W320XH100'];
+
 export default function App() {
   const [layout, setLayout] = useState<BuzzvilNativeAdLayout>('300x250');
   const [interstitialType, setInterstitialType] =
     useState<InterstitialType>('dialog');
+  const [bannerSize, setBannerSize] = useState<BannerSize>('W320XH50');
   const [log, setLog] = useState<string[]>([]);
 
   const append = (line: string) => {
@@ -44,7 +53,7 @@ export default function App() {
 
   useEffect(() => {
     // login is required before ads will load.
-    initialize(BUZZVIL_APP_ID);
+    initialize(BUZZVIL_APP_ID, BUZZVIL_APP_SECRET);
     login({
       userId: '9cfe5338-ea71-4208-b622-6ceb0df3d44b',
       gender: 'MALE',
@@ -146,6 +155,46 @@ export default function App() {
         </Pressable>
       </View>
 
+      <Text style={styles.heading}>BuzzBanner — smoke test</Text>
+
+      <View style={styles.picker}>
+        {BANNER_SIZES.map((value) => {
+          const selected = value === bannerSize;
+          return (
+            <Pressable
+              key={value}
+              onPress={() => setBannerSize(value)}
+              style={[styles.chip, selected && styles.chipSelected]}
+            >
+              <Text
+                style={[styles.chipText, selected && styles.chipTextSelected]}
+              >
+                {value}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={styles.adArea}>
+        <BuzzBanner
+          // Remount on size change so a fresh load runs per size.
+          key={bannerSize}
+          placementId={BUZZVIL_BANNER_PLACEMENT_ID}
+          size={bannerSize}
+          style={
+            bannerSize === 'W320XH50'
+              ? styles.bannerW320XH50
+              : styles.bannerW320XH100
+          }
+          onLoaded={() => append('banner onLoaded')}
+          onFailed={(e) =>
+            append(`banner onFailed {code:${e.code}, message:${e.message}}`)
+          }
+          onClicked={() => append('banner onClicked')}
+        />
+      </View>
+
       <Text style={styles.heading}>Event log</Text>
       <ScrollView
         style={styles.logBox}
@@ -202,6 +251,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 60,
+  },
+  bannerW320XH50: {
+    width: 320,
+    height: 50,
+  },
+  bannerW320XH100: {
+    width: 320,
+    height: 100,
   },
   buttonRow: {
     flexDirection: 'row',

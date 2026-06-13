@@ -55,8 +55,12 @@
   [self.loaders removeObjectForKey:unitId];
 }
 
-- (void)initialize:(NSString *)appId
+- (void)initialize:(NSString *)appId appSecret:(NSString *)appSecret
 {
+  // iOS has no separate BuzzBanner init (the banner uses the BuzzBenefit
+  // session), so `appSecret` is intentionally ignored here — it exists only for
+  // Android's BuzzBanner.init (parity asymmetry; see NativeBuzzvil.ts).
+  (void)appSecret;
   BuzzBenefitConfig *config = [BuzzBenefitConfig configWith:^(BuzzBenefitConfigBuilder *builder) {
     builder.appId = appId;
   }];

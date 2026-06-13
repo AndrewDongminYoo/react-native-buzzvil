@@ -73,4 +73,9 @@ dependencies {
   // FAIL_ON_PROJECT_REPOS mode, which rejects module-level repositories {}.
   api platform("com.buzzvil:buzzvil-bom:6.7.+")
   implementation "com.buzzvil:buzzvil-sdk"
+
+  // The SDK BuzzBannerView extends androidx ConstraintLayout. It is present
+  // transitively on the runtime classpath, but the Kotlin compiler needs the
+  // supertype on the COMPILE classpath to resolve com.buzzvil.buzzbanner.BuzzBannerView.
+  implementation "androidx.constraintlayout:constraintlayout:2.0.1"
 }
