@@ -94,11 +94,25 @@ class BuzzvilModule(
   // showInterstitial(unitId) presents the instance loaded by loadInterstitial.
   private val interstitials = mutableMapOf<String, BuzzInterstitial>()
 
+  // In-flight (unsettled) loads. The `interstitials` map retains an instance
+  // even after a successful load (for `show`), so it can't distinguish
+  // in-flight from loaded — this set does.
+  private val loadingUnitIds = mutableSetOf<String>()
+
   override fun loadInterstitial(
     unitId: String,
     type: String,
     promise: Promise,
   ) {
+    // Reject a concurrent load while a prior one is still in flight (parity with
+    // iOS). Allow re-loading once the previous load has settled (loaded/failed).
+    if (unitId in loadingUnitIds) {
+      promise.reject(
+        "buzzvil_interstitial_load_failed",
+        "A load is already in progress for this unitId.",
+      )
+      return
+    }
     // type sentinel: "bottomSheet" → bottom sheet; "dialog"/""/unknown → dialog.
     val builder = BuzzInterstitial.Builder(unitId)
     val interstitial =
@@ -110,6 +124,9 @@ class BuzzvilModule(
       )
       return
     }
+    // Mark in-flight only once we commit to a load (after the null-build check,
+    // so a failed build doesn't permanently block this unitId).
+    loadingUnitIds.add(unitId)
     interstitials[unitId] = interstitial
 
     // The SDK listener can fire repeatedly; settle the promise exactly once.
@@ -119,12 +136,15 @@ class BuzzvilModule(
         override fun onAdLoaded() {
           if (settled) return
           settled = true
+          // No longer in flight; keep the instance in `interstitials` for `show`.
+          loadingUnitIds.remove(unitId)
           promise.resolve(null)
         }
 
         override fun onAdLoadFailed(error: BuzzAdError?) {
           if (settled) return
           settled = true
+          loadingUnitIds.remove(unitId)
           interstitials.remove(unitId)
           promise.reject(
             "buzzvil_interstitial_load_failed",
@@ -136,7 +156,8 @@ class BuzzvilModule(
           // New-Arch typed EventEmitter: codegen generates this concrete emit
           // method on the spec base; payload is a flat primitive map.
           emitOnInterstitialClosed(Arguments.createMap().apply { putString("unitId", unitId) })
-          // Lifecycle: drop the dismissed instance so the map doesn't retain it.
+          // Lifecycle: drop the dismissed instance so the map doesn't retain it
+          // (loadingUnitIds was already cleared when the load settled).
           interstitials.remove(unitId)
         }
       },

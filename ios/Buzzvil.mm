@@ -52,7 +52,7 @@
 
 - (void)removeLoaderForUnitId:(NSString *)unitId
 {
-  [_loaders removeObjectForKey:unitId];
+  [self.loaders removeObjectForKey:unitId];
 }
 
 - (void)initialize:(NSString *)appId
@@ -143,6 +143,17 @@
   BuzzInterstitialType interstitialType =
       [type isEqualToString:@"bottomSheet"] ? BuzzInterstitialTypeBottomSheet : BuzzInterstitialTypeDialog;
 
+  // Reject a concurrent load while a prior one is still in flight: the per-load
+  // delegate is weak, so overwriting the in-flight loader deallocs it and its
+  // callbacks fire into nil — permanently hanging the first promise. Allow
+  // re-loading once the previous load has settled (loaded/failed).
+  BuzzInterstitialLoader *existing = self.loaders[unitId];
+  if (existing != nil && !existing.settled) {
+    reject(@"buzzvil_interstitial_load_failed",
+           @"A load is already in progress for this unitId.", nil);
+    return;
+  }
+
   BuzzInterstitialLoader *loader = [BuzzInterstitialLoader new];
   loader.unitId = unitId;
   loader.resolve = resolve;
@@ -165,7 +176,7 @@
     if (presenter == nil) {
       return;
     }
-    BuzzInterstitialLoader *loader = self->_loaders[unitId];
+    BuzzInterstitialLoader *loader = self.loaders[unitId];
     if (loader == nil) {
       return; // nothing loaded for this unitId — no-op
     }
