@@ -6,8 +6,11 @@ import {
   BuzzvilNativeAdView,
   addInterstitialClosedListener,
   initialize,
+  loadEntryPoints,
   loadInterstitial,
   login,
+  showEntryPointBottomSheet,
+  showEntryPointPopup,
   showInterstitial,
   showLuckyBox,
   type BannerSize,
@@ -224,6 +227,43 @@ export default function App() {
           }}
         >
           <Text style={styles.buttonText}>Open LuckyBox</Text>
+        </Pressable>
+      </View>
+
+      <Text style={styles.heading}>EntryPoint — smoke test</Text>
+
+      <View style={styles.buttonRow}>
+        <Pressable
+          style={styles.button}
+          onPress={() =>
+            loadEntryPoints()
+              .then((types) =>
+                append(`entryPoints loaded: [${types.join(', ')}]`)
+              )
+              .catch((e: unknown) =>
+                append(`entryPoints load failed: ${String(e)}`)
+              )
+          }
+        >
+          <Text style={styles.buttonText}>Load</Text>
+        </Pressable>
+        <Pressable
+          style={styles.button}
+          onPress={() => {
+            append('entryPoint popup show requested');
+            showEntryPointPopup();
+          }}
+        >
+          <Text style={styles.buttonText}>Popup</Text>
+        </Pressable>
+        <Pressable
+          style={styles.button}
+          onPress={() => {
+            append('entryPoint bottomSheet show requested');
+            showEntryPointBottomSheet();
+          }}
+        >
+          <Text style={styles.buttonText}>BottomSheet</Text>
         </Pressable>
       </View>
 

@@ -17,6 +17,8 @@ import com.buzzvil.buzzbenefit.benefithub.BuzzBenefitHubPage
 import com.buzzvil.buzzbenefit.BuzzAdError
 import com.buzzvil.buzzbenefit.interstitial.BuzzInterstitial
 import com.buzzvil.buzzbenefit.interstitial.BuzzInterstitialListener
+import com.buzzvil.entrypoint.BuzzEntryPoint
+import com.buzzvil.entrypoint.BuzzEntryPointType
 import com.buzzvil.sdk.BuzzvilSdk
 import com.buzzvil.sdk.BuzzvilSdkLoginListener
 import com.buzzvil.sdk.BuzzvilSdkUser
@@ -107,6 +109,50 @@ class BuzzvilModule(
       BuzzBenefitHub.show(activity, configBuilder.build())
     }
   }
+
+  // --- EntryPoint ---
+
+  // EntryPoint needs no explicit init here: BuzzvilSdk.initialize wires up the
+  // internal BuzzEntryPoint.init (which takes an internal DI component). iOS's
+  // BuzzEntryPoint.shared is likewise ready post-init.
+  override fun loadEntryPoints(promise: Promise) {
+    BuzzEntryPoint.load(
+      { types ->
+        // Map by enum case name (NOT ordinal): the Android and iOS enum
+        // orderings differ, so canonical string names are the only safe
+        // cross-platform contract. See NativeBuzzvil.ts.
+        val names = Arguments.createArray()
+        types.forEach { names.pushString(it.toName()) }
+        promise.resolve(names)
+      },
+      { error: BuzzAdError ->
+        promise.reject("buzzvil_entrypoint_load_failed", error.message ?: error.type.name)
+      },
+    )
+  }
+
+  override fun showEntryPointPopup() {
+    UiThreadUtil.runOnUiThread {
+      val activity = currentActivity ?: return@runOnUiThread
+      BuzzEntryPoint.showPopup(activity)
+    }
+  }
+
+  override fun showEntryPointBottomSheet() {
+    UiThreadUtil.runOnUiThread {
+      val activity = currentActivity ?: return@runOnUiThread
+      BuzzEntryPoint.showBottomSheet(activity)
+    }
+  }
+
+  private fun BuzzEntryPointType.toName(): String =
+    when (this) {
+      BuzzEntryPointType.FAB -> "fab"
+      BuzzEntryPointType.POPUP -> "popup"
+      BuzzEntryPointType.BOTTOM_SHEET -> "bottomSheet"
+      BuzzEntryPointType.BANNER -> "banner"
+      BuzzEntryPointType.CUSTOM -> "custom"
+    }
 
   // --- Interstitial ---
 

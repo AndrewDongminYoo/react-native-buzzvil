@@ -49,6 +49,19 @@ export interface BenefitHubOptions {
   page?: BenefitHubPage;
 }
 
+/**
+ * EntryPoint type names. Returned by `loadEntryPoints()` and used to decide
+ * which `showEntryPoint*` to call. `'popup'` and `'bottomSheet'` are
+ * presentable via this package today; `'fab'` / `'banner'` / `'custom'` are
+ * recognized in the type set but not yet exposed as show methods.
+ */
+export type EntryPointType =
+  | 'fab'
+  | 'popup'
+  | 'bottomSheet'
+  | 'banner'
+  | 'custom';
+
 /** Supported Native-ad layout sizes (width x height in dp). */
 export type BuzzvilNativeAdLayout =
   | '320x50'

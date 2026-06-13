@@ -18,6 +18,9 @@ jest.mock('../NativeBuzzvil', () => ({
     logout: jest.fn(),
     isLoggedIn: jest.fn(() => Promise.resolve(true)),
     showBenefitHub: jest.fn(),
+    loadEntryPoints: jest.fn(() => Promise.resolve(['popup', 'bottomSheet'])),
+    showEntryPointPopup: jest.fn(),
+    showEntryPointBottomSheet: jest.fn(),
     loadInterstitial: jest.fn(() => Promise.resolve()),
     showInterstitial: jest.fn(),
     onInterstitialClosed: jest.fn(
@@ -41,6 +44,9 @@ import {
   isLoggedIn,
   showBenefitHub,
   showLuckyBox,
+  loadEntryPoints,
+  showEntryPointPopup,
+  showEntryPointBottomSheet,
   userIdWarnings,
 } from '../buzzvil.native';
 import {
@@ -122,6 +128,23 @@ describe('buzzvil native wrapper — sentinel mapping', () => {
   it('passes page:history as the third sentinel', () => {
     showBenefitHub({ page: 'history' });
     expect(native.showBenefitHub).toHaveBeenCalledWith('', false, 'history');
+  });
+});
+
+describe('entry point wrapper', () => {
+  it('resolves loadEntryPoints with the available type names', async () => {
+    await expect(loadEntryPoints()).resolves.toEqual(['popup', 'bottomSheet']);
+    expect(native.loadEntryPoints).toHaveBeenCalledTimes(1);
+  });
+
+  it('forwards showEntryPointPopup verbatim', () => {
+    showEntryPointPopup();
+    expect(native.showEntryPointPopup).toHaveBeenCalledTimes(1);
+  });
+
+  it('forwards showEntryPointBottomSheet verbatim', () => {
+    showEntryPointBottomSheet();
+    expect(native.showEntryPointBottomSheet).toHaveBeenCalledTimes(1);
   });
 });
 

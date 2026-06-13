@@ -31,3 +31,15 @@ export function showBenefitHub(_options: BenefitHubOptions = {}): void {
 export function showLuckyBox(): void {
   throw new Error(UNSUPPORTED);
 }
+
+export function loadEntryPoints(): Promise<string[]> {
+  return Promise.reject(new Error(UNSUPPORTED));
+}
+
+export function showEntryPointPopup(): void {
+  throw new Error(UNSUPPORTED);
+}
+
+export function showEntryPointBottomSheet(): void {
+  throw new Error(UNSUPPORTED);
+}
