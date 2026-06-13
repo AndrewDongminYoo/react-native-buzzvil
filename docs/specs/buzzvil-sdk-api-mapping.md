@@ -252,8 +252,69 @@ BuzzBanner has a platform-specific init requirement:
 So `appSecret` is required **only** for BuzzBanner on Android; it is optional
 (sentinel `''`) for every other surface.
 
+## FlexAd (Fabric component `BuzzFlexAdView`)
+
+Implemented as a Fabric (New Architecture) view component (like `BuzzBanner`,
+not a TurboModule method). The TS spec is `src/BuzzFlexAdViewNativeComponent.ts`;
+the friendly wrapper is `src/BuzzFlexAd.native.tsx` (web fallback:
+`src/BuzzFlexAd.tsx`), re-exported from `src/index.tsx`. **Implemented** (spec +
+JS wrapper + native impls).
+
+### JS API (`src/BuzzFlexAd.native.tsx`)
+
+```tsx
+<BuzzFlexAd unitId primaryColor onLoaded onFailed onClicked />
+```
+
+| Prop           | Type                             | Notes                                                                       |
+| -------------- | -------------------------------- | --------------------------------------------------------------------------- |
+| `unitId`       | `string`                         | FlexAd unit id from the Buzzvil admin. Required.                            |
+| `primaryColor` | `ColorValue`                     | Optional accent color (`BuzzFlex.setPrimaryColor`). SDK default if omitted. |
+| `onLoaded`     | `() => void`                     | Fires when the ad has loaded and been bound to the view.                    |
+| `onFailed`     | `(e: { code; message }) => void` | Load failure; payload already unwrapped from `nativeEvent`.                 |
+| `onClicked`    | `() => void`                     | Fires on ad tap.                                                            |
+
+- FlexAd has a single fixed layout (no size variants, unlike the native ad /
+  BuzzBanner). The ad content is **16:9**, and the total view height is
+  **16:9 + ~41dp/pt** (CTA button + divider, auto-added by the SDK).
+- As with the native ad / BuzzBanner, under Fabric the host frame comes from
+  the JS shadow node (`style`) — give the view an explicit width and a height
+  of `width * 9/16 + 41`, or iOS bounds stay `0` and the ad never loads.
+- `onFailed.code` is the **NSError code as a string** on iOS (the `message`
+  appends `domain`/`code` for self-describing logs, mirroring BuzzBanner) and
+  the **symbolic `BuzzAdError.Type` name** on Android (mirroring the native ad)
+  — the two platforms intentionally differ here, following each platform's
+  existing convention for their respective error shapes.
+
+### Native mapping
+
+| Bridge member (`Spec`)                | Android (`com.buzzvil.buzzbenefit.flexad`)                                 | iOS (`BuzzFlex` / `BuzzFlexAdView`)                                                         |
+| ------------------------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `unitId`                              | `BuzzFlex(unitId)`                                                         | `BuzzFlex(unitId:)`                                                                         |
+| `primaryColor`                        | `BuzzFlex.setPrimaryColor(Int)`                                            | `BuzzFlex.setPrimaryColor(UIColor)`                                                         |
+| load                                  | `BuzzFlex.load()`                                                          | `BuzzFlex.load()`                                                                           |
+| bind                                  | `BuzzFlexAdView.bind(buzzFlex)` on `onSuccess`                             | `BuzzFlexAdView.bind(_:)` on `buzzFlexOnSuccess` (via Swift shim — see below)               |
+| unload / teardown                     | `BuzzFlex.dispose()`                                                       | `BuzzFlex.delegate = nil` + drop references                                                 |
+| `onLoaded` / `onFailed` / `onClicked` | `BuzzFlex.Listener` (`onSuccess` / `onFailure(BuzzAdError)` / `onClicked`) | `BuzzFlexDelegate` (`buzzFlexOnSuccess` / `buzzFlexOnFailure(Error)` / `buzzFlexOnClicked`) |
+
+- **Android:** hosts `com.buzzvil.buzzbenefit.flexad.BuzzFlexAdView` (a
+  `LinearLayout`), constructed with `(context, null)` (no plain-`Context`
+  constructor). The SDK view is **self-contained** — it inflates its own
+  layout and manages its own attach/detach lifecycle; unlike the native ad, no
+  external `handleResume`/`handlePause` wiring is needed.
+- **iOS:** hosts `BuzzFlexAdView` (a `UIView`). `BuzzFlex` and
+  `BuzzFlexAdView`'s designated initializer are fully `@objc`/Obj-C-bridgeable,
+  but **`BuzzFlexAdView.bind(_:)` and `setLoadingText(_:)` are plain Swift, not
+  `@objc`** — calling `bind` requires the small `@objc` shim
+  `ios/BuzzFlexAdShim.swift` (`BuzzFlexAdBinder.bind(_:to:)`). This is the only
+  Swift file in the pod; `Buzzvil.podspec` sets `s.swift_version`.
+- Both platforms' Fabric class is named `BuzzFlexAdView`, which collides with
+  the SDK's own view class of the same name on each platform — isolated via
+  `ios/BuzzFlexAdHost.{h,mm}` (Obj-C++) / a Kotlin import alias
+  (`BuzzFlexAdView as SdkBuzzFlexAdView`), mirroring `BuzzBannerAdHost`.
+
 ## Deferred (not in v1)
 
-FlexAd, Pop/EntryPoint, LuckyBox, UI configuration.
-Add to the spec per the PRD. (Native ads + Interstitial + BuzzBanner are
-implemented — see above.)
+Pop/EntryPoint, LuckyBox, UI configuration.
+Add to the spec per the PRD. (Native ads + Interstitial + BuzzBanner + FlexAd
+are implemented — see above.)
