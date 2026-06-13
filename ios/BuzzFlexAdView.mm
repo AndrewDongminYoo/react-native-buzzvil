@@ -57,9 +57,14 @@ using namespace facebook::react;
 
   _unitId = newViewProps.unitId;
 
-  [self loadIfReady];
-
+  // Commit props to _props BEFORE loadIfReady so that loadIfReady's read of
+  // _props (for primaryColor) is always current — not the previous cycle's
+  // value. This ordering matters on in-place unitId changes where the window
+  // gate passes immediately (unlike the initial-mount path, where the gate
+  // defers to didMoveToWindow by which time super has already run).
   [super updateProps:props oldProps:oldProps];
+
+  [self loadIfReady];
 }
 
 // Fabric may deliver props in any order / re-deliver them; (re)request only
