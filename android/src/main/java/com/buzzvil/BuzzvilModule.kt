@@ -126,7 +126,7 @@ class BuzzvilModule(
         promise.resolve(names)
       },
       { error: BuzzAdError ->
-        promise.reject(error.type.name, error.message ?: error.type.name)
+        promise.reject("buzzvil_entrypoint_load_failed", error.message ?: error.type.name)
       },
     )
   }

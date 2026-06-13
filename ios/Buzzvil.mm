@@ -182,7 +182,7 @@
         resolve(names);
       }
       onFailure:^(NSError *error) {
-        reject([NSString stringWithFormat:@"%ld", (long)error.code],
+        reject(@"buzzvil_entrypoint_load_failed",
                error.localizedDescription ?: error.domain, error);
       }];
 }
