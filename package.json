@@ -88,6 +88,7 @@
     "react-native": "*"
   },
   "resolutions": {
+    "esbuild": "^0.28.1",
     "jest": "30.4.1",
     "jest-cli": "30.4.1",
     "@jest/core": "30.4.1",
