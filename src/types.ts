@@ -23,3 +23,23 @@ export interface BenefitHubOptions {
   /** Open directly on the history/earnings page instead of the default hub. */
   showHistory?: boolean;
 }
+
+/** Supported Native-ad layout sizes (width x height in dp). */
+export type BuzzvilNativeAdLayout =
+  | '320x50'
+  | '320x100'
+  | '320x130'
+  | '300x250'
+  | '320x480';
+
+/** Friendly props for the `BuzzvilNativeAdView` Fabric component. */
+export interface BuzzvilNativeAdViewProps {
+  unitId: string;
+  layout?: BuzzvilNativeAdLayout;
+  style?: import('react-native').StyleProp<import('react-native').ViewStyle>;
+  onAdLoaded?: (e: { width: number; height: number }) => void;
+  onAdFailed?: (e: { code: string; message: string }) => void;
+  onAdClicked?: () => void;
+  onImpressed?: () => void;
+  onRewarded?: (e: { success: boolean }) => void;
+}

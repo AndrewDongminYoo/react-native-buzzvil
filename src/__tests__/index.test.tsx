@@ -20,6 +20,7 @@ import {
   logout,
   isLoggedIn,
   showBenefitHub,
+  userIdWarnings,
 } from '../buzzvil.native';
 
 // `jest.mocked` preserves the Spec signatures, so `toHaveBeenCalledWith` is
@@ -57,5 +58,31 @@ describe('buzzvil native wrapper — sentinel mapping', () => {
   it('maps showHistory and routePath', () => {
     showBenefitHub({ routePath: '0', showHistory: true });
     expect(native.showBenefitHub).toHaveBeenCalledWith('0', true);
+  });
+});
+
+describe('userIdWarnings — dev userId sanity checks', () => {
+  it('returns no warnings for a clean non-PII id', () => {
+    expect(userIdWarnings('user-1234-abcd')).toEqual([]);
+  });
+
+  it('flags an empty userId', () => {
+    expect(userIdWarnings('')).toEqual(['userId is empty.']);
+  });
+
+  it('flags an email-like userId', () => {
+    expect(
+      userIdWarnings('ydm2790@naver.com').some((m) => m.includes('email'))
+    ).toBe(true);
+  });
+
+  it('flags a non-ASCII userId', () => {
+    expect(userIdWarnings('유저1').some((m) => m.includes('ASCII'))).toBe(true);
+  });
+
+  it('flags a userId over 255 characters', () => {
+    expect(userIdWarnings('a'.repeat(256)).some((m) => m.includes('255'))).toBe(
+      true
+    );
   });
 });
