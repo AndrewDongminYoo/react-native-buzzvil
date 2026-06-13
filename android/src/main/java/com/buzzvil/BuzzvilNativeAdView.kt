@@ -41,15 +41,22 @@ class BuzzvilNativeAdView(
   private var buzzNative: BuzzNative? = null
   private var binder: BuzzNativeViewBinder? = null
 
-  // The unit id of the in-flight / loaded ad. Doubles as the reload guard: an
-  // in-place `unitId` prop change must (re)load (mirrors iOS's `_loadedUnitId`
-  // comparison). Cleared in cleanup() so a recycled view can load again — never
-  // latched permanently.
-  private var loadedUnitId: String? = null
+  // The (unitId, layoutVariant) pair the in-flight / loaded ad was configured
+  // with. Doubles as the reload guard: an in-place prop change must (re)load
+  // (mirrors iOS's `_loadedUnitId` comparison). Cleared in cleanup() so a recycled
+  // view can load again — never latched permanently. Keyed on the pair so that a
+  // layoutVariant-only change re-binds with the new layout instead of being
+  // silently ignored.
+  private var loadedKey: String? = null
 
+  // Setters STORE ONLY — they must not trigger a load. React applies unitId and
+  // layout through separate @ReactProp setters; loading from each one would, on a
+  // render that changes both, fire an intermediate load for the first-delivered
+  // prop paired with the stale other prop (an extra ad request for a combination
+  // JS never rendered). The manager drives the single load from
+  // onAfterUpdateTransaction, once the whole prop batch has settled.
   fun setUnitId(id: String) {
     unitId = id.ifEmpty { null }
-    loadIfReady()
   }
 
   fun setLayoutVariant(v: String) {
@@ -62,14 +69,20 @@ class BuzzvilNativeAdView(
   }
 
   // Fabric sets props in any order, and the view may not be attached when the
-  // unitId arrives — both entry points call this. Guard on an id comparison
-  // (mirrors iOS): (re)load only when a non-null unitId actually changes, so an
-  // in-place `unitId` prop change on a mounted view reloads instead of being
-  // ignored.
-  private fun loadIfReady() {
-    val id = unitId
-    if (id == null || !isAttachedToWindow || id == loadedUnitId) return
-    loadedUnitId = id
+  // unitId arrives — every entry point calls this. Guard on a key comparison
+  // (mirrors iOS): (re)load only when a non-null unitId is present, the view is
+  // attached, and the (id, layoutVariant) pair actually changed — so an in-place
+  // prop change on a mounted view reloads instead of being ignored, and a
+  // layoutVariant-only change still re-binds with the new layout.
+  // Called from onAttachedToWindow and from the manager's onAfterUpdateTransaction
+  // (after a prop batch settles). The key guard makes repeat calls a no-op, so
+  // driving it from both entry points is safe.
+  internal fun loadIfReady() {
+    val id = unitId ?: return
+    if (!isAttachedToWindow) return
+    val key = "$id|$layoutVariant"
+    if (key == loadedKey) return
+    loadedKey = key
 
     // Tear down any previous ad before the new load (mirrors cleanup()'s
     // teardown); a unitId change on a mounted view reuses this same object.
@@ -118,10 +131,10 @@ class BuzzvilNativeAdView(
       { _ ->
         // Inflate + bind must touch views on the UI thread. Re-check the reload
         // guard on the UI thread (mirrors iOS): a late callback from a previous
-        // unitId must bail when `loadedUnitId` has since changed, otherwise it
-        // would bind a stale ad and double-emit.
+        // load must bail when `loadedKey` has since changed, otherwise it would
+        // bind a stale ad and double-emit.
         UiThreadUtil.runOnUiThread {
-          if (disposed || id != loadedUnitId) return@runOnUiThread
+          if (disposed || key != loadedKey) return@runOnUiThread
           bindLoadedAd(buzz)
         }
       },
@@ -129,7 +142,7 @@ class BuzzvilNativeAdView(
         // Marshal to the UI thread for symmetry with the success path; the SDK
         // gives no thread guarantee for these callbacks.
         UiThreadUtil.runOnUiThread {
-          if (disposed || id != loadedUnitId) return@runOnUiThread
+          if (disposed || key != loadedKey) return@runOnUiThread
           val payload = Arguments.createMap()
           payload.putString("code", error.type.name)
           payload.putString("message", error.message ?: error.type.name)
@@ -233,7 +246,7 @@ class BuzzvilNativeAdView(
     buzzNative = null
     // Clear the reload guard for recycle symmetry with iOS (prepareForRecycle):
     // a reused view must be able to load again.
-    loadedUnitId = null
+    loadedKey = null
     removeAllViews()
   }
 
