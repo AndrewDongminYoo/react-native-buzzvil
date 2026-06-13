@@ -113,6 +113,46 @@ export interface Spec extends TurboModule {
   showInterstitial(unitId: string): void;
 
   /**
+   * Load the app's EntryPoints. Resolves with the list of **available** entry
+   * point type names once the SDK has loaded them, rejects on load failure.
+   *
+   * - iOS: `BuzzEntryPoint.shared.load(onSuccess:onFailure:)`.
+   * - Android: `BuzzEntryPoint.load(onSuccess, onFailure)`.
+   *
+   * Returns type names from the set `'fab' | 'popup' | 'bottomSheet' | 'banner'
+   * | 'custom'`. **The native enum orderings differ across platforms** (iOS
+   * `fab,popup,bottomSheet,banner,custom`; Android `FAB,BANNER,POPUP,
+   * BOTTOM_SHEET,CUSTOM`), so each native impl maps its own enum **by case
+   * name** to these canonical strings — never by raw ordinal across the bridge.
+   *
+   * EntryPoint requires no separate initialization: it is wired up by the SDK
+   * during `initialize` (iOS `BuzzEntryPoint.shared` is ready post-init;
+   * Android's internal `BuzzEntryPoint.init` is called by `BuzzvilSdk.initialize`).
+   * `loadEntryPoints` must resolve before any `showEntryPoint*` call.
+   */
+  loadEntryPoints(): Promise<string[]>;
+
+  /**
+   * Present the popup EntryPoint over the current screen. No-op if the popup
+   * type is unavailable or `loadEntryPoints` has not resolved. UI work — runs
+   * on the main thread (parity with `showBenefitHub`).
+   *
+   * - iOS: `BuzzEntryPoint.shared.showPopup(on: currentViewController)`.
+   * - Android: `BuzzEntryPoint.showPopup(currentActivity)`.
+   */
+  showEntryPointPopup(): void;
+
+  /**
+   * Present the bottom-sheet EntryPoint over the current screen. No-op if the
+   * bottomSheet type is unavailable or `loadEntryPoints` has not resolved. UI
+   * work — runs on the main thread.
+   *
+   * - iOS: `BuzzEntryPoint.shared.showBottomSheet(on: currentViewController)`.
+   * - Android: `BuzzEntryPoint.showBottomSheet(currentActivity)`.
+   */
+  showEntryPointBottomSheet(): void;
+
+  /**
    * Fires when an interstitial is dismissed (Android `onAdClosed` / iOS
    * `BuzzInterstitialDidDismiss`). The payload's `unitId` identifies which
    * placement closed; the JS wrapper filters by it so each

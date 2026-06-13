@@ -1,5 +1,5 @@
 import Buzzvil from './NativeBuzzvil';
-import type { BuzzvilUser, BenefitHubOptions } from './types';
+import type { BuzzvilUser, BenefitHubOptions, EntryPointType } from './types';
 
 /**
  * Native (iOS/Android) implementation of the public Buzzvil API. Maps the
@@ -76,4 +76,22 @@ export function showBenefitHub(options: BenefitHubOptions = {}): void {
 /** Open BenefitHub directly on the LuckyBox page. */
 export function showLuckyBox(): void {
   showBenefitHub({ page: 'luckyBox' });
+}
+
+/**
+ * Load the app's EntryPoints. Resolves with the available type names; must
+ * resolve before any `showEntryPoint*` call. Rejects on SDK load failure.
+ */
+export function loadEntryPoints(): Promise<EntryPointType[]> {
+  return Buzzvil.loadEntryPoints() as Promise<EntryPointType[]>;
+}
+
+/** Present the popup EntryPoint over the current screen. */
+export function showEntryPointPopup(): void {
+  Buzzvil.showEntryPointPopup();
+}
+
+/** Present the bottom-sheet EntryPoint over the current screen. */
+export function showEntryPointBottomSheet(): void {
+  Buzzvil.showEntryPointBottomSheet();
 }
