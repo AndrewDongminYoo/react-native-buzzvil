@@ -85,17 +85,21 @@ class BuzzvilModule(
   override fun showBenefitHub(
     routePath: String,
     showHistory: Boolean,
+    page: String,
   ) {
     // BenefitHub launches an Activity — must run on the main thread (parity
     // with the iOS dispatch_async(main) path).
     UiThreadUtil.runOnUiThread {
       val activity = currentActivity ?: return@runOnUiThread
       val configBuilder = BuzzBenefitHubConfig.Builder()
-      if (routePath.isNotEmpty()) {
-        configBuilder.routePath(routePath)
-      }
-      if (showHistory) {
-        configBuilder.queryParams(BuzzBenefitHubPage.HISTORY.toRedirectQueryParams())
+      when (page) {
+        "luckyBox" -> configBuilder.routePath(BuzzBenefitHubPage.LUCKY_BOX.toRoutePath())
+        "missionPack" -> configBuilder.routePath(BuzzBenefitHubPage.MISSION_PACK.toRoutePath())
+        "history" -> configBuilder.queryParams(BuzzBenefitHubPage.HISTORY.toRedirectQueryParams())
+        else -> {
+          if (routePath.isNotEmpty()) configBuilder.routePath(routePath)
+          if (showHistory) configBuilder.queryParams(BuzzBenefitHubPage.HISTORY.toRedirectQueryParams())
+        }
       }
       BuzzBenefitHub.show(activity, configBuilder.build())
     }
