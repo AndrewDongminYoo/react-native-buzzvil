@@ -4,16 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-A React Native **Turbo Module** package (`@dongminyu/react-native-buzzvil`) that wraps Buzzvil's
-**BuzzBenefit v6** native SDKs so they can be used from a React Native app:
+A React Native (New Architecture) package (`react-native-buzzvil-ad`) that wraps Buzzvil's **BuzzBenefit v6** native SDKs so they can be used from a React Native app:
 
 - Android: https://docs.buzzvil.com/docs/buzzbenefit-android/v6/introduction
 - iOS: https://docs.buzzvil.com/docs/buzzbenefit-ios/v6/introduction
 
-> **Current state:** the repo is still the unmodified `create-react-native-library` scaffold. The
-> only surface that exists is the placeholder `multiply(a, b)` — JS spec, native impls, and the
-> example app all reference it. Real Buzzvil work means _replacing_ `multiply` with the actual SDK
-> bridge, not adding alongside it.
+It exposes **two native surfaces** (see Architecture below):
+
+1. A **TurboModule** `Buzzvil` — the session/offerwall API (`initialize`, `login`, `logout`, `isLoggedIn`, `showBenefitHub`).
+2. A **Fabric view** `BuzzvilNativeAdView` — an in-feed native ad component (`create-react-native-library` type is `fabric-view`).
+
+> Watch the names — four distinct identifiers that look alike: npm package `react-native-buzzvil-ad`, native module + iOS pod `Buzzvil`, codegen library `BuzzvilSpec`, git repo `react-native-buzzvil`.
+> The `chore/rename-package` work renamed only the npm package; the native names are unchanged.
 
 ## Commands
 
@@ -40,50 +42,54 @@ yarn turbo run build:android   # builds the example Android app
 yarn turbo run build:ios       # builds the example iOS app (needs `bundle exec pod install` in example/ios first)
 ```
 
-CI (`.github/workflows/ci.yml`) runs, as separate jobs: `lint` (lint + typecheck), `test`,
-`build-library` (`yarn prepare`), `build-android`, `build-ios`, `build-web`. All must pass.
+CI (`.github/workflows/ci.yml`) runs, as separate jobs: `lint` (lint + typecheck), `test`, `build-library` (`yarn prepare`), `build-android`, `build-ios`, `build-web`. All must pass.
 
-## Architecture: how the Turbo Module bridge fits together
+## Architecture: how the bridges fit together
 
-This is the New Architecture (Fabric/TurboModules) — codegen generates the native interface from the
-TS spec, so the **TS spec is the source of truth**. The four pieces must stay in sync:
+This is the New Architecture (Fabric/TurboModules) — codegen generates the native interface from the TS spec, so the **TS spec is the source of truth**.
+There are two independent bridges; each has a JS spec, a Kotlin impl, an Obj-C++/Swift impl, and a `.tsx`/`.native.tsx` web-vs-native wrapper split (`.native.tsx` calls native, `.tsx` is the web fallback).
+Both are registered by `BuzzvilPackage.kt` on Android (`getModule` for the TurboModule, `createViewManagers` for the Fabric view).
 
-1. **`src/NativeBuzzvil.ts`** — the codegen spec. `interface Spec extends TurboModule` declares the
-   native methods. `TurboModuleRegistry.getEnforcing<Spec>('Buzzvil')` binds to the native module
-   named `Buzzvil`. Codegen only understands a restricted type subset (no rich enums/unions; numbers
-   are `Double`, etc.) — design the bridge API around that constraint.
-2. **`src/index.tsx`** — public JS API re-exported to consumers. Keep raw `NativeBuzzvil` calls out
-   of the public surface; wrap them in friendly functions (the `multiply.tsx` / `multiply.native.tsx`
-   split shows the web-vs-native pattern — `.native.tsx` calls the native module, `.tsx` is the web
-   fallback).
-3. **`android/src/main/java/com/buzzvil/BuzzvilModule.kt`** — extends the generated
-   `NativeBuzzvilSpec`. Java package is `com.buzzvil` (set in `package.json` → `codegenConfig.android`).
-   `BuzzvilPackage.kt` registers the module. Android config in `android/build.gradle`
-   (minSdk 24, compileSdk/targetSdk 36, Kotlin 2.0.21). Buzzvil Android SDK Maven deps go here.
-4. **`ios/Buzzvil.mm`** (Obj-C++) + `ios/Buzzvil.h` — implements the spec and returns the generated
-   `NativeBuzzvilSpecJSI` from `getTurboModule:`. `+moduleName` must return `"Buzzvil"`. Buzzvil iOS
-   SDK pod deps go in `Buzzvil.podspec`.
+### 1. TurboModule `Buzzvil` — session / offerwall API
 
-Codegen identifiers (keep consistent when renaming anything): spec/library name `BuzzvilSpec`
-(`package.json` → `codegenConfig.name`), native module name `Buzzvil`, JS srcs dir `src`.
+- **`src/NativeBuzzvil.ts`** — the codegen spec. `TurboModuleRegistry.getEnforcing<Spec>('Buzzvil')` binds to the native module named `Buzzvil`.
+- **`src/buzzvil.native.tsx`** (+ `buzzvil.tsx` web fallback) — friendly JS wrapper; re-exported from `src/index.tsx`. Keep raw `NativeBuzzvil` calls out of the public surface.
+- **`android/.../com/buzzvil/BuzzvilModule.kt`** extends the generated `NativeBuzzvilSpec`.
+- **`ios/Buzzvil.mm`** + `ios/Buzzvil.h` implement the spec, return `NativeBuzzvilSpecJSI` from `getTurboModule:`; `+moduleName` returns `"Buzzvil"`.
 
-The flow when adding a method: declare it in `NativeBuzzvil.ts` → implement in `BuzzvilModule.kt`
-and `Buzzvil.mm` → rebuild the example app (native changes require a rebuild; JS changes hot-reload).
+**Sentinel contract** (the key gotcha): codegen understands only a restricted type subset — no optionals, no enums/unions, numbers are `Double`.
+So the spec is **primitives-only**, and the JS wrapper encodes "not provided" as sentinels (`gender: ''`, `birthYear: 0`, `routePath: ''`) that **both** native impls must interpret identically.
+The full contract is documented at the top of `src/NativeBuzzvil.ts` — read it before touching either native impl; don't duplicate it elsewhere.
+
+### 2. Fabric view `BuzzvilNativeAdView` — in-feed native ad
+
+- **`src/BuzzvilNativeAdViewNativeComponent.ts`** — `codegenNativeComponent('BuzzvilNativeAdView')`. Event payloads are flat primitives (codegen events can't carry nested objects/enums).
+- **`src/BuzzvilNativeAdView.native.tsx`** (+ `.tsx` web fallback) — wrapper that maps friendly props and unwraps `e.nativeEvent` for handlers.
+- **`android/.../BuzzvilNativeAdView.kt`** (the view) + **`BuzzvilNativeAdViewManager.kt`** (the `SimpleViewManager`). The manager's `getExportedCustomDirectEventTypeConstants` maps native event names to JS prop handlers (`topAdLoaded` → `onAdLoaded`, etc.) — these names must match the spec.
+- **`ios/BuzzvilNativeAdView.mm`** + `.h`. Registered in `package.json` → `codegenConfig.ios.components`.
+
+**Sizing gotcha**: under Fabric the view's frame comes from the JS shadow node (`style`), so `src/layout.ts` sizes are applied only as a **default** style.
+Without a JS-side height, iOS bounds stay 0 and `onAdLoaded` never fires — a consumer `style` always wins over the default.
+
+### Shared
+
+Codegen identifiers (keep consistent when renaming anything): library name `BuzzvilSpec` (`package.json` → `codegenConfig.name`), native module name `Buzzvil`, Fabric component `BuzzvilNativeAdView`, Java package `com.buzzvil`, JS srcs dir `src`.
+
+Native SDK deps: **iOS** `Buzzvil.podspec` pins `BuzzvilSDK` + `BuzzAdBenefitSDK` `~> 6.7.5`.
+**Android** `android/build.gradle` uses `com.buzzvil:buzzvil-bom:6.7.+` + `buzzvil-sdk`; the Buzzvil Maven repo (`dl.buzzvil.com/public/maven`) must be declared in the **consumer's** `settings.gradle` (RNGP runs `FAIL_ON_PROJECT_REPOS`, which rejects module-level `repositories {}`).
+Android config: minSdk 24, compile/target SDK 36, Kotlin 2.0.21, Java 17.
+
+The flow when adding a method/prop: declare it in the JS spec → implement in the Kotlin + Obj-C++ impls → rebuild the example app (native changes require a rebuild; JS changes hot-reload).
 
 ## Build & packaging
 
-- `react-native-builder-bob` builds `src/` → `lib/` as an ESM module + TypeScript declarations
-  (targets in `package.json` → `react-native-builder-bob`). `tsconfig.build.json` is the build TS config.
-- Only the paths in `package.json` → `files` are published (`src`, `lib`, `android`, `ios`, `cpp`,
-  `*.podspec`, `react-native.config.js`). The example app and tests are excluded.
-- The `example/` app consumes the library by path (`example/react-native.config.js`), so source
-  changes are picked up live without publishing.
+- `react-native-builder-bob` builds `src/` → `lib/` as an ESM module + TypeScript declarations (targets in `package.json` → `react-native-builder-bob`). `tsconfig.build.json` is the build TS config.
+- Only the paths in `package.json` → `files` are published (`src`, `lib`, `android`, `ios`, `cpp`, `*.podspec`, `react-native.config.js`). The example app and tests are excluded.
+- The `example/` app consumes the library by path (`example/react-native.config.js`), so source changes are picked up live without publishing.
 
 ## Conventions
 
-- TypeScript is strict; ESLint uses the flat-config (`eslint.config.mjs`) with the RN community config.
-  Prettier settings live in `package.json` (single quotes, 2-space, ES5 trailing commas).
+- TypeScript is strict; ESLint uses the flat-config (`eslint.config.mjs`) with the RN community config. Prettier settings live in `package.json` (single quotes, 2-space, ES5 trailing commas).
 - RN: functional components + hooks only.
-- `docs/notes`, `docs/plans`, `docs/specs` exist as the home for design notes, implementation plans,
-  and SDK-mapping specs — put planning artifacts there rather than scattering them.
+- `docs/notes`, `docs/plans`, `docs/specs` exist as the home for design notes, implementation plans, and SDK-mapping specs — put planning artifacts there rather than scattering them.
 - Korean comments and user-facing strings are intentional; commit messages and identifiers in English.

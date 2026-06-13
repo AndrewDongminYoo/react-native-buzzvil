@@ -16,26 +16,33 @@ import com.buzzvil.sdk.BuzzvilSdk
 import com.buzzvil.sdk.BuzzvilSdkLoginListener
 import com.buzzvil.sdk.BuzzvilSdkUser
 
-class BuzzvilModule(reactContext: ReactApplicationContext) :
-  NativeBuzzvilSpec(reactContext) {
-
+class BuzzvilModule(
+  reactContext: ReactApplicationContext,
+) : NativeBuzzvilSpec(reactContext) {
   override fun initialize(appId: String) {
     val application = reactApplicationContext.applicationContext as Application
     val config = BuzzBenefitConfig.Builder(appId).build()
     BuzzvilSdk.initialize(application, config)
   }
 
-  override fun login(userId: String, gender: String, birthYear: Double, promise: Promise) {
+  override fun login(
+    userId: String,
+    gender: String,
+    birthYear: Double,
+    promise: Promise,
+  ) {
     // Sentinel contract (see NativeBuzzvil.ts): "" gender / 0 birthYear → unset.
-    val user = BuzzvilSdkUser(
-      userId = userId,
-      gender = when (gender) {
-        "MALE" -> BuzzvilSdkUser.Gender.MALE
-        "FEMALE" -> BuzzvilSdkUser.Gender.FEMALE
-        else -> BuzzvilSdkUser.Gender.UNKNOWN // sentinel "" → unspecified
-      },
-      birthYear = if (birthYear > 0) birthYear.toInt() else null,
-    )
+    val user =
+      BuzzvilSdkUser(
+        userId = userId,
+        gender =
+          when (gender) {
+            "MALE" -> BuzzvilSdkUser.Gender.MALE
+            "FEMALE" -> BuzzvilSdkUser.Gender.FEMALE
+            else -> BuzzvilSdkUser.Gender.UNKNOWN // sentinel "" → unspecified
+          },
+        birthYear = if (birthYear > 0) birthYear.toInt() else null,
+      )
     BuzzvilSdk.login(
       user,
       object : BuzzvilSdkLoginListener {
@@ -58,7 +65,10 @@ class BuzzvilModule(reactContext: ReactApplicationContext) :
     promise.resolve(BuzzvilSdk.isLoggedIn)
   }
 
-  override fun showBenefitHub(routePath: String, showHistory: Boolean) {
+  override fun showBenefitHub(
+    routePath: String,
+    showHistory: Boolean,
+  ) {
     // BenefitHub launches an Activity — must run on the main thread (parity
     // with the iOS dispatch_async(main) path).
     UiThreadUtil.runOnUiThread {

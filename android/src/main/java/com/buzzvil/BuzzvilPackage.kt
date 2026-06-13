@@ -8,28 +8,30 @@ import com.facebook.react.module.model.ReactModuleInfoProvider
 import com.facebook.react.uimanager.ViewManager
 
 class BuzzvilPackage : BaseReactPackage() {
-  override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
-    return listOf(BuzzvilNativeAdViewManager())
-  }
+  override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> = listOf(BuzzvilNativeAdViewManager())
 
-  override fun getModule(name: String, reactContext: ReactApplicationContext): NativeModule? {
-    return if (name == BuzzvilModule.NAME) {
+  override fun getModule(
+    name: String,
+    reactContext: ReactApplicationContext,
+  ): NativeModule? =
+    if (name == BuzzvilModule.NAME) {
       BuzzvilModule(reactContext)
     } else {
       null
     }
-  }
 
-  override fun getReactModuleInfoProvider() = ReactModuleInfoProvider {
-    mapOf(
-      BuzzvilModule.NAME to ReactModuleInfo(
-        name = BuzzvilModule.NAME,
-        className = BuzzvilModule.NAME,
-        canOverrideExistingModule = false,
-        needsEagerInit = false,
-        isCxxModule = false,
-        isTurboModule = true
+  override fun getReactModuleInfoProvider() =
+    ReactModuleInfoProvider {
+      mapOf(
+        BuzzvilModule.NAME to
+          ReactModuleInfo(
+            name = BuzzvilModule.NAME,
+            className = BuzzvilModule.NAME,
+            canOverrideExistingModule = false,
+            needsEagerInit = false,
+            isCxxModule = false,
+            isTurboModule = true,
+          ),
       )
-    )
-  }
+    }
 }
