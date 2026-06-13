@@ -1,0 +1,15 @@
+# osv-scanner suppressions (run via trunk; see .trunk/trunk.yaml → osv-scanner).
+#
+# Every entry here is a DEV-only, transitive dependency that is NOT part of the
+# published package. The npm tarball ships only `package.json` → "files"
+# (src, lib, android, ios, *.podspec, react-native.config.js) — no node_modules
+# — so these advisories affect the local build toolchain only, never consumers
+# of react-native-buzzvil-ad.
+#
+# Patchable advisories are fixed directly instead of ignored:
+#   - joi    GHSA-q7cg-457f-vx79  → bumped to 17.13.4 (Dependabot #2)
+#   - esbuild GHSA-gv7w-rqvm-qjhr / GHSA-g7r4-m6w7-qqqr → resolutions ^0.28.1
+
+[[IgnoredVulns]]
+id = "GHSA-gh4j-gqv2-49f6"
+reason = "fast-xml-parser@4.5.6 — transitive, dev-only (via @react-native-community/cli-platform-apple / cli-config-android), not shipped. The fix is fast-xml-parser 5.7.0, a breaking major the React Native CLI does not support yet (it requires ^4.4.1); forcing it breaks `react-native config`. Re-evaluate when @react-native-community/cli adopts fast-xml-parser v5. (recorded 2026-06-13)"

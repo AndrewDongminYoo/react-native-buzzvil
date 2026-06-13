@@ -1,6 +1,6 @@
 {
   "name": "react-native-buzzvil-ad",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Unofficial, community-maintained React Native wrapper for the Buzzvil BuzzBenefit SDK (Android & iOS). Not affiliated with, endorsed by, or supported by Buzzvil.",
   "main": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
@@ -20,6 +20,7 @@
     "cpp",
     "*.podspec",
     "react-native.config.js",
+    "CHANGELOG.md",
     "!ios/build",
     "!android/build",
     "!android/gradle",
@@ -88,6 +89,7 @@
     "react-native": "*"
   },
   "resolutions": {
+    "esbuild": "^0.28.1",
     "jest": "30.4.1",
     "jest-cli": "30.4.1",
     "@jest/core": "30.4.1",

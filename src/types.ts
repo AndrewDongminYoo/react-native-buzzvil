@@ -16,6 +16,12 @@ export interface BuzzvilUser {
   birthYear?: number;
 }
 
+/**
+ * Interstitial presentation style. `'dialog'` → `BuzzInterstitial.buildDialog()`;
+ * `'bottomSheet'` → `.buildBottomSheet()`. Carried to native as a plain string.
+ */
+export type InterstitialType = 'dialog' | 'bottomSheet';
+
 /** Options for presenting the BenefitHub (offerwall). */
 export interface BenefitHubOptions {
   /** BenefitHub page number from the Buzzvil admin (advanced routing). */

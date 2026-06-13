@@ -113,7 +113,85 @@ _binder = [BuzzNativeViewBinder viewBinderWith:^(BuzzNativeViewBinderBuilder *bu
    callbacks — verify against the actual SDK before promising any
    `EventEmitter` surface; none in v1.
 
+## Interstitial (TurboModule — imperative + close event)
+
+Added to the `Buzzvil` TurboModule (`src/NativeBuzzvil.ts`); friendly wrapper
+`src/interstitial.native.tsx` (web fallback `src/interstitial.tsx`). The native
+side holds one instance per `unitId` (design Decision 1). **Implemented**
+(spec + JS wrapper + native impls).
+
+### JS API (`src/interstitial.native.tsx`, re-exported from `src/index.tsx`)
+
+| Function                                                | Behavior                                                                                 |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `loadInterstitial(unitId, type?): Promise<void>`        | Loads for `unitId`; resolves on loaded, rejects on load-fail. `type` default `'dialog'`. |
+| `showInterstitial(unitId): void`                        | Presents the interstitial previously loaded for `unitId`.                                |
+| `addInterstitialClosedListener(unitId, cb): { remove }` | Subscribes to the close event, filtered to the given `unitId`.                           |
+
+- `type InterstitialType = 'dialog' \| 'bottomSheet'`.
+- The `onInterstitialClosed` event carries payload `{ unitId }`; the wrapper
+  gates the callback on `event.unitId === unitId` so listeners for other units
+  never fire.
+
+### Native mapping
+
+| Bridge member (`Spec`)                    | Android (`BuzzInterstitial`)                                               | iOS (`BuzzInterstitial`)                                        |
+| ----------------------------------------- | -------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| `loadInterstitial(unitId, type): Promise` | `Builder(unitId).buildDialog()` / `.buildBottomSheet()`; `.load(listener)` | `BuzzInterstitial(unitId:type:)`, set delegate, `load()`        |
+| `showInterstitial(unitId)`                | `.show(context)` on the stored instance (UI thread, `currentActivity`)     | `present(on:)` from `RCTPresentedViewController()` (main queue) |
+| `onInterstitialClosed: EventEmitter`      | `onAdClosed` → `emitOnInterstitialClosed({unitId})`                        | `BuzzInterstitialDidDismiss` → `emitOnInterstitialClosed:`      |
+
+- **Android:** `BuzzInterstitial.Builder(unitId).buildDialog()` /
+  `.buildBottomSheet()`, with a `BuzzInterstitialListener` (load / fail / close)
+  kept in a `unitId`-keyed map.
+- **iOS:** `BuzzInterstitial(unitId:type:)` with a `BuzzInterstitialDelegate`
+  (`buzzInterstitialDidLoadAd:` / `...didFailToLoadAd:withError:` /
+  `buzzInterstitialDidDismiss:`); shown via `presentOnViewController:`.
+
+`type` carries `'dialog'` / `'bottomSheet'` as a plain string (no codegen
+enums); the `InterstitialType` union + `'dialog'` default live in the wrapper.
+`load` resolves on `onAdLoaded` / `DidLoadAd`, rejects on `onAdLoadFailed` /
+`DidFail(toLoadAd:)`.
+
+A concurrent `loadInterstitial` for a `unitId` that is already in flight is
+rejected with `buzzvil_interstitial_load_failed`.
+
+### Interstitial events — codegen mechanism decision (verified)
+
+\*\*Decision: codegen typed `EventEmitter<T>` (NOT the classic `NativeEventEmitter`
+
+- `addListener`/`removeListeners` pattern).\*\* The spec member is:
+
+```ts
+readonly onInterstitialClosed: CodegenTypes.EventEmitter<InterstitialClosedEvent>;
+```
+
+Imported as `CodegenTypes.EventEmitter` (matches the existing
+`BuzzvilNativeAdViewNativeComponent.ts` convention). Note: the runtime
+`EventEmitter` exported from `react-native`'s index is a **class**, not this
+type — so it must come from the `CodegenTypes` namespace. Codegen matches the
+event member by the **bare type name** `EventEmitter` (`getTypeAnnotationName`
+returns the `.right.name` of a qualified name), so `CodegenTypes.EventEmitter`
+is recognized identically to a bare `EventEmitter`.
+
+**Empirical evidence (RN 0.85 codegen, run against this spec):**
+
+- Schema: `onInterstitialClosed` parsed as
+  `{"type":"EventEmitterTypeAnnotation","typeAnnotation":{"type":"TypeAliasTypeAnnotation","name":"InterstitialClosedEvent"}}`.
+- Generated Java (`NativeBuzzvilSpec.java`): a **concrete** `protected final void
+emitOnInterstitialClosed(ReadableMap value)` — `loadInterstitial`/`showInterstitial`
+  are the only new `abstract` methods.
+- Generated iOS (`BuzzvilSpecJSI.h` + `BuzzvilSpec.h`): concrete
+  `emitOnInterstitialClosed(...)` on `NativeBuzzvilCxxSpec`, `eventEmitterMap_`
+  auto-registers `"onInterstitialClosed"`, and `emitOnInterstitialClosed:` is
+  declared in the `RCTTurboModule` category (concrete).
+
+**Consequences:** the native stubs implement only `loadInterstitial` /
+`showInterstitial`; the emit hook needs no stub. The JS wrapper subscribes via
+the generated `onInterstitialClosed` member (shape `(handler) =>
+EventSubscription`) and filters by `event.unitId`.
+
 ## Deferred (not in v1)
 
-Interstitial, BuzzBanner, FlexAd, Pop/EntryPoint, LuckyBox, UI configuration.
-Add to the spec per the PRD. (Native ads are implemented — see above.)
+BuzzBanner, FlexAd, Pop/EntryPoint, LuckyBox, UI configuration.
+Add to the spec per the PRD. (Native ads + Interstitial are implemented — see above.)
