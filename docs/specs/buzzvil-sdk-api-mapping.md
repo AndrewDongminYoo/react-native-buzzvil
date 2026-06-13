@@ -24,6 +24,9 @@ with `page: 'luckyBox'`).
 | `logout()`                                  | `BuzzvilSdk.logout()`                                                                                         | `BuzzBenefit.shared.logout()`                                                                      |
 | `isLoggedIn(): Promise<boolean>`            | `BuzzvilSdk.isLoggedIn` (property)                                                                            | `BuzzBenefit.shared.isLoggedIn()`                                                                  |
 | `showBenefitHub(routePath, showHistory, page)` | `BuzzBenefitHub.show(currentActivity, BuzzBenefitHubConfig.Builder()…build())`                              | `BuzzBenefitHub().show(on: currentViewController)` (+ `BuzzBenefitHubConfig.Builder()`)            |
+| `loadEntryPoints(): Promise<string[]>`      | `BuzzEntryPoint.load(onSuccess, onFailure)`                                                                   | `BuzzEntryPoint.shared.load(onSuccess:onFailure:)`                                                |
+| `showEntryPointPopup()`                     | `BuzzEntryPoint.showPopup(currentActivity)`                                                                   | `BuzzEntryPoint.shared.showPopup(on: currentViewController)`                                       |
+| `showEntryPointBottomSheet()`               | `BuzzEntryPoint.showBottomSheet(currentActivity)`                                                             | `BuzzEntryPoint.shared.showBottomSheet(on: currentViewController)`                                 |
 
 ## Sentinel contract (no optionals in codegen)
 
@@ -55,6 +58,32 @@ resolves it:
 JS surface: `showLuckyBox()` is a convenience for `showBenefitHub({ page:
 'luckyBox' })`. `showHistory: true` and `page: 'history'` are equivalent; both
 are supported.
+
+### EntryPoint (imperative — popup / bottomSheet)
+
+EntryPoint is an app-wide surface (no per-call unit id): configured in the
+Buzzvil admin, loaded once, then presented. The flow is `loadEntryPoints()`
+(async; resolves with the available type names) → `showEntryPointPopup()` /
+`showEntryPointBottomSheet()` (imperative, present over the current screen on
+the main thread, like `showBenefitHub`).
+
+- No explicit EntryPoint init: iOS `BuzzEntryPoint.shared` is ready after the
+  SDK `initialize`; Android's internal `BuzzEntryPoint.init` is wired by
+  `BuzzvilSdk.initialize`.
+- **Enum-ordering trap.** `BuzzEntryPointType` is declared in a **different
+  order** on each platform (iOS `fab, popup, bottomSheet, banner, custom`;
+  Android `FAB, BANNER, POPUP, BOTTOM_SHEET, CUSTOM`). Each native impl maps
+  its own enum **by case name** to the canonical strings `'fab' | 'popup' |
+  'bottomSheet' | 'banner' | 'custom'` — never by raw ordinal across the
+  bridge. The JS layer only ever sees the canonical names.
+- Scope: only `popup` and `bottomSheet` are exposed today (both need just the
+  presenting context, so they fit the TurboModule cleanly). `fab` (Android
+  needs a `ViewGroup` container — platform-asymmetric), `banner` (needs a
+  Fabric view component), and `custom` are recognized in `EntryPointType` but
+  not yet presentable; add them as follow-ups.
+- Deep-link routing on tap (`setDeepLinkHandler`) is **not** wired in this
+  baseline — the entry point renders, but tapping through may not navigate
+  until a handler is added.
 
 ## Native ad (Fabric component `BuzzvilNativeAdView`)
 
@@ -335,6 +364,7 @@ JS wrapper + native impls).
 
 ## Deferred (not in v1)
 
-Pop/EntryPoint, UI configuration.
+EntryPoint FAB / Banner / custom types, deep-link routing, UI configuration.
 Add to the spec per the PRD. (Native ads + Interstitial + BuzzBanner + FlexAd
-are implemented; LuckyBox is reachable via `showLuckyBox()` — see above.)
+are implemented; LuckyBox is reachable via `showLuckyBox()`; EntryPoint
+popup / bottomSheet are implemented — see above.)
