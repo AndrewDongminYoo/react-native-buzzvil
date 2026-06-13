@@ -143,14 +143,16 @@
   BuzzInterstitialType interstitialType =
       [type isEqualToString:@"bottomSheet"] ? BuzzInterstitialTypeBottomSheet : BuzzInterstitialTypeDialog;
 
-  // Reject a concurrent load while a prior one is still in flight: the per-load
-  // delegate is weak, so overwriting the in-flight loader deallocs it and its
-  // callbacks fire into nil — permanently hanging the first promise. Allow
-  // re-loading once the previous load has settled (loaded/failed).
+  // Reject a new load while a loader for this unitId already exists — in flight,
+  // loaded-and-waiting-to-show, or currently showing (parity with Android).
+  // Overwriting self.loaders[unitId] would (a) let the OLD loader's didDismiss
+  // remove the NEW loader by unitId, and (b) dealloc the existing loader — and,
+  // as the sole strong owner of its BuzzInterstitial, dealloc a currently-visible
+  // interstitial. The entry is cleared on dismiss/failure, then a fresh load is OK.
   BuzzInterstitialLoader *existing = self.loaders[unitId];
-  if (existing != nil && !existing.settled) {
+  if (existing != nil) {
     reject(@"buzzvil_interstitial_load_failed",
-           @"A load is already in progress for this unitId.", nil);
+           @"An interstitial for this unitId is already loaded or loading; wait for onInterstitialClosed before loading again.", nil);
     return;
   }
 
