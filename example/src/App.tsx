@@ -2,15 +2,21 @@ import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import {
   BuzzvilNativeAdView,
+  addInterstitialClosedListener,
   initialize,
+  loadInterstitial,
   login,
+  showInterstitial,
   type BuzzvilNativeAdLayout,
+  type InterstitialType,
 } from 'react-native-buzzvil-ad';
 
 // These come from the Buzzvil admin and are REQUIRED for an ad to load.
 // Replace the placeholders with your real values before running on a device.
 const BUZZVIL_APP_ID = 'YOUR_APP_ID';
 const BUZZVIL_UNIT_ID = 'YOUR_NATIVE_UNIT_ID';
+// Interstitial uses its own unit id, distinct from the native-ad unit above.
+const BUZZVIL_INTERSTITIAL_UNIT_ID = 'YOUR_INTERSTITIAL_UNIT_ID';
 
 const LAYOUTS: BuzzvilNativeAdLayout[] = [
   '320x50',
@@ -20,8 +26,12 @@ const LAYOUTS: BuzzvilNativeAdLayout[] = [
   '320x480',
 ];
 
+const INTERSTITIAL_TYPES: InterstitialType[] = ['dialog', 'bottomSheet'];
+
 export default function App() {
   const [layout, setLayout] = useState<BuzzvilNativeAdLayout>('300x250');
+  const [interstitialType, setInterstitialType] =
+    useState<InterstitialType>('dialog');
   const [log, setLog] = useState<string[]>([]);
 
   const append = (line: string) => {
@@ -42,6 +52,14 @@ export default function App() {
     })
       .then(() => append('login ok'))
       .catch((e: unknown) => append(`login failed: ${String(e)}`));
+  }, []);
+
+  useEffect(() => {
+    const sub = addInterstitialClosedListener(
+      BUZZVIL_INTERSTITIAL_UNIT_ID,
+      () => append('onInterstitialClosed')
+    );
+    return sub.remove;
   }, []);
 
   return (
@@ -81,6 +99,51 @@ export default function App() {
           onImpressed={() => append('onImpressed')}
           onRewarded={(e) => append(`onRewarded {success:${e.success}}`)}
         />
+      </View>
+
+      <Text style={styles.heading}>Interstitial — smoke test</Text>
+
+      <View style={styles.picker}>
+        {INTERSTITIAL_TYPES.map((value) => {
+          const selected = value === interstitialType;
+          return (
+            <Pressable
+              key={value}
+              onPress={() => setInterstitialType(value)}
+              style={[styles.chip, selected && styles.chipSelected]}
+            >
+              <Text
+                style={[styles.chipText, selected && styles.chipTextSelected]}
+              >
+                {value}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+
+      <View style={styles.buttonRow}>
+        <Pressable
+          style={styles.button}
+          onPress={() =>
+            loadInterstitial(BUZZVIL_INTERSTITIAL_UNIT_ID, interstitialType)
+              .then(() => append('interstitial loaded'))
+              .catch((e: unknown) =>
+                append(`interstitial load failed: ${String(e)}`)
+              )
+          }
+        >
+          <Text style={styles.buttonText}>Load</Text>
+        </Pressable>
+        <Pressable
+          style={styles.button}
+          onPress={() => {
+            append('interstitial show requested');
+            showInterstitial(BUZZVIL_INTERSTITIAL_UNIT_ID);
+          }}
+        >
+          <Text style={styles.buttonText}>Show</Text>
+        </Pressable>
       </View>
 
       <Text style={styles.heading}>Event log</Text>
@@ -139,6 +202,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 60,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  button: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    backgroundColor: '#222',
+  },
+  buttonText: {
+    color: '#fff',
+    fontWeight: '600',
   },
   logBox: {
     flex: 1,
