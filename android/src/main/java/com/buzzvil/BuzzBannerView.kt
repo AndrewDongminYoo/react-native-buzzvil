@@ -40,14 +40,18 @@ class BuzzBannerView(
   // cleanup() so a recycled view can load again — never latched permanently.
   private var loadedKey: String? = null
 
+  // Setters STORE ONLY — they must not trigger a load. React applies placementId
+  // and size through separate @ReactProp setters; loading from each one would, on
+  // a render that changes both, fire an intermediate load for the first-delivered
+  // prop paired with the stale other prop (an extra ad request for a combination
+  // JS never rendered). The manager drives the single load from
+  // onAfterUpdateTransaction, once the whole prop batch has settled.
   fun setPlacementId(id: String) {
     placementId = id.ifEmpty { null }
-    loadIfReady()
   }
 
   fun setSize(v: String) {
     size = v
-    loadIfReady()
   }
 
   override fun onAttachedToWindow() {
@@ -69,7 +73,10 @@ class BuzzBannerView(
   // (mirrors BuzzvilNativeAdView): (re)configure only when a non-null placementId
   // is present, the view is attached, and the (id,size) pair actually changed —
   // so an in-place prop change on a mounted view reloads instead of being ignored.
-  private fun loadIfReady() {
+  // Called from onAttachedToWindow and from the manager's onAfterUpdateTransaction
+  // (after a prop batch settles). The (id,size) key guard makes repeat calls a
+  // no-op, so driving it from both entry points is safe.
+  internal fun loadIfReady() {
     val id = placementId ?: return
     if (!isAttachedToWindow) return
     val key = "$id|$size"

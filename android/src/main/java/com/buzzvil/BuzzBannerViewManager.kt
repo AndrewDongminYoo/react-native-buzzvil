@@ -49,6 +49,15 @@ class BuzzBannerViewManager :
       "topClicked" to mapOf("registrationName" to "onClicked"),
     )
 
+  // Single load entry point: React applies placementId/size through separate
+  // setters (store-only), then calls this once after the prop batch settles —
+  // so a render that changes both props triggers exactly one load with the final
+  // (placementId, size) pair, never an intermediate request for a stale pair.
+  override fun onAfterUpdateTransaction(view: BuzzBannerView) {
+    super.onAfterUpdateTransaction(view)
+    view.loadIfReady()
+  }
+
   override fun onDropViewInstance(view: BuzzBannerView) {
     view.cleanup()
     super.onDropViewInstance(view)
