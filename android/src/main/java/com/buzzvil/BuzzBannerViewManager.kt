@@ -49,6 +49,11 @@ class BuzzBannerViewManager :
       "topClicked" to mapOf("registrationName" to "onClicked"),
     )
 
+  override fun onDropViewInstance(view: BuzzBannerView) {
+    view.cleanup()
+    super.onDropViewInstance(view)
+  }
+
   companion object {
     const val NAME = "BuzzBannerView"
   }
