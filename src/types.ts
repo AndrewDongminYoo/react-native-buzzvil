@@ -38,6 +38,19 @@ export type BuzzvilNativeAdLayout =
   | '300x250'
   | '320x480';
 
+/** Supported BuzzBanner sizes. */
+export type BannerSize = 'W320XH50' | 'W320XH100';
+
+/** Friendly props for the `BuzzBanner` (`BuzzBannerView`) Fabric component. */
+export interface BuzzBannerProps {
+  placementId: string;
+  size: BannerSize;
+  style?: import('react-native').StyleProp<import('react-native').ViewStyle>;
+  onLoaded?: () => void;
+  onFailed?: (e: { code: string; message: string }) => void;
+  onClicked?: () => void;
+}
+
 /** Friendly props for the `BuzzvilNativeAdView` Fabric component. */
 export interface BuzzvilNativeAdViewProps {
   unitId: string;

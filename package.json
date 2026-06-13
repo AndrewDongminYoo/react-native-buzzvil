@@ -130,6 +130,9 @@
       "components": {
         "BuzzvilNativeAdView": {
           "className": "BuzzvilNativeAdView"
+        },
+        "BuzzBannerView": {
+          "className": "BuzzBannerView"
         }
       }
     }
