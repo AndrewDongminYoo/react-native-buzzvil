@@ -65,11 +65,19 @@ using namespace facebook::react;
 }
 
 // Fabric may deliver props in any order / re-deliver them; (re)request only when
-// a non-empty placementId is present and the (id,size) pair actually changed —
-// so an in-place prop change reloads instead of being ignored (mirrors Android).
+// a non-empty placementId is present, the view is in a window, and the (id,size)
+// pair actually changed — so an in-place prop change reloads instead of being
+// ignored (mirrors Android's isAttachedToWindow + loadedKey guard).
 - (void)loadIfReady
 {
   if (_placementId.empty()) {
+    return;
+  }
+  // Window gate (mirrors Android's `if (!isAttachedToWindow) return`):
+  // requestAd before the view is in a window can fire impressions against a
+  // view that has no frame yet. didMoveToWindow will re-call loadIfReady when
+  // the view attaches, so deferring here is correct.
+  if (self.window == nil) {
     return;
   }
   std::string key = _placementId + "|" + _size;
@@ -84,8 +92,8 @@ using namespace facebook::react;
 
   UIViewController *presenter = RCTPresentedViewController();
   if (presenter == nil) {
-    // Can't configure without a root VC; clear the guard so a later prop
-    // re-delivery retries.
+    // Edge case: view is in a non-key window, or the key window has no rootVC
+    // yet. Clear the guard so a later prop re-delivery retries.
     _loadedKey.clear();
     return;
   }
@@ -97,11 +105,9 @@ using namespace facebook::react;
 
 #pragma mark - Lifecycle
 
-// iOS only calls updateProps on prop CHANGES, so if the presenter was nil at
-// config time (loadIfReady cleared its guard) and props don't change again, the
-// banner would never load. Mirror Android's prop-independent onAttachedToWindow:
-// retry once the view is in a window. loadIfReady guards on the (id,size) key
-// (no double-load) and on an empty placementId, so this is a safe retry.
+// First-load trigger when updateProps was delivered before the view had a
+// window: loadIfReady gates on self.window, so we re-drive it from here.
+// The key guard inside loadIfReady prevents a double-load on re-attach.
 - (void)didMoveToWindow
 {
   [super didMoveToWindow];
