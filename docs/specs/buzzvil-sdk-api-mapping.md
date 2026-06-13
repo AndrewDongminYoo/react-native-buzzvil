@@ -12,8 +12,10 @@ Source docs:
 ## v1 surface (implemented in the spec)
 
 Scope is the **common, foundational** surface only: initialize → login →
-present BenefitHub. Feature-specific inventory (FlexAd, Pop/EntryPoint,
-LuckyBox) is deferred until the PRD defines which are used.
+present BenefitHub. Feature-specific inventory (FlexAd, Pop/EntryPoint)
+is deferred until the PRD defines which are used. LuckyBox is accessible
+via `showLuckyBox()` (no new native code; routes through `showBenefitHub`
+with `page: 'luckyBox'`).
 
 | Bridge method (`Spec`)                      | Android (`BuzzvilSdk` / `BuzzBenefitHub`)                                                                     | iOS (`BuzzBenefit.shared` / `BuzzBenefitHub`)                                                      |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
@@ -21,7 +23,7 @@ LuckyBox) is deferred until the PRD defines which are used.
 | `login(userId, gender, birthYear): Promise` | `BuzzvilSdk.login(BuzzvilSdkUser(userId, Gender?, birthYear?), BuzzvilSdkLoginListener{onSuccess/onFailure})` | `BuzzBenefit.shared.login(with: BuzzBenefitUser.Builder(userId:)…build(), onSuccess:, onFailure:)` |
 | `logout()`                                  | `BuzzvilSdk.logout()`                                                                                         | `BuzzBenefit.shared.logout()`                                                                      |
 | `isLoggedIn(): Promise<boolean>`            | `BuzzvilSdk.isLoggedIn` (property)                                                                            | `BuzzBenefit.shared.isLoggedIn()`                                                                  |
-| `showBenefitHub(routePath, showHistory)`    | `BuzzBenefitHub.show(currentActivity, BuzzBenefitHubConfig.Builder()…build())`                                | `BuzzBenefitHub().show(on: currentViewController)` (+ `BuzzBenefitHubConfig.Builder()`)            |
+| `showBenefitHub(routePath, showHistory, page)` | `BuzzBenefitHub.show(currentActivity, BuzzBenefitHubConfig.Builder()…build())`                              | `BuzzBenefitHub().show(on: currentViewController)` (+ `BuzzBenefitHubConfig.Builder()`)            |
 
 ## Sentinel contract (no optionals in codegen)
 
@@ -35,6 +37,24 @@ identically:**
 | `birthYear`   | 4-digit year; `0` → pass `null` (don't set)                                        |
 | `routePath`   | admin page number; `''` → no route path (default hub)                              |
 | `showHistory` | `true` → open history page (Android `BuzzBenefitHubPage.HISTORY` / iOS `.history`) |
+| `page`        | named page; `''` → not set. `'luckyBox'` / `'missionPack'` / `'history'`. Takes precedence over `routePath`/`showHistory` |
+
+### Named BenefitHub pages (LuckyBox / MissionPack / History)
+
+The SDK exposes `BuzzBenefitHubPage` (Android enum `LUCKY_BOX` / `MISSION_PACK`
+/ `HISTORY`; iOS class properties `luckyBox` / `missionPack` / `history`). Its
+`toRoutePath()` returns the route string and `toRedirectQueryParams()` the
+history redirect — both computed at runtime, so the route values are **not**
+hardcoded in JS. The `page` sentinel carries the page name to native, which
+resolves it:
+
+- `'luckyBox'` / `'missionPack'` → `configBuilder.routePath(PAGE.toRoutePath())`
+- `'history'` → `configBuilder.queryParams(HISTORY.toRedirectQueryParams())`
+  (identical to the legacy `showHistory: true` path)
+
+JS surface: `showLuckyBox()` is a convenience for `showBenefitHub({ page:
+'luckyBox' })`. `showHistory: true` and `page: 'history'` are equivalent; both
+are supported.
 
 ## Native ad (Fabric component `BuzzvilNativeAdView`)
 
@@ -315,6 +335,6 @@ JS wrapper + native impls).
 
 ## Deferred (not in v1)
 
-Pop/EntryPoint, LuckyBox, UI configuration.
+Pop/EntryPoint, UI configuration.
 Add to the spec per the PRD. (Native ads + Interstitial + BuzzBanner + FlexAd
-are implemented — see above.)
+are implemented; LuckyBox is reachable via `showLuckyBox()` — see above.)

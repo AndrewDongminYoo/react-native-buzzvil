@@ -32,6 +32,12 @@ type InterstitialClosedEvent = Readonly<{ unitId: string }>;
  *   route path** (open the default hub page).
  * - `showHistory`: `true` → open the BenefitHub history/earnings page
  *   (Android `BuzzBenefitHubPage.HISTORY` / iOS `.history` query params).
+ * - `page`: a named BenefitHub page. **`''` → not set** (ignored). Recognized
+ *   values: `'luckyBox'` (LUCKY_BOX), `'missionPack'` (MISSION_PACK),
+ *   `'history'` (same as `showHistory: true`). Takes precedence over
+ *   `routePath` / `showHistory` when non-empty. Both native impls must map
+ *   these names to `BuzzBenefitHubPage.*` and call `toRoutePath()` /
+ *   `toRedirectQueryParams()` as appropriate.
  */
 export interface Spec extends TurboModule {
   /**
@@ -78,9 +84,9 @@ export interface Spec extends TurboModule {
    * - iOS: `BuzzBenefitHub().show(on: currentViewController)`.
    * - Android: `BuzzBenefitHub.show(currentActivity, config)`.
    *
-   * See the sentinel contract above for `routePath` / `showHistory`.
+   * See the sentinel contract above for `routePath` / `showHistory` / `page`.
    */
-  showBenefitHub(routePath: string, showHistory: boolean): void;
+  showBenefitHub(routePath: string, showHistory: boolean, page: string): void;
 
   /**
    * Load an interstitial ad for `unitId`. Resolves when the ad has loaded

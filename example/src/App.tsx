@@ -9,6 +9,7 @@ import {
   loadInterstitial,
   login,
   showInterstitial,
+  showLuckyBox,
   type BannerSize,
   type BuzzvilNativeAdLayout,
   type InterstitialType,
@@ -210,6 +211,20 @@ export default function App() {
           }
           onClicked={() => append('flexAd onClicked')}
         />
+      </View>
+
+      <Text style={styles.heading}>LuckyBox — smoke test</Text>
+
+      <View style={styles.buttonRow}>
+        <Pressable
+          style={styles.button}
+          onPress={() => {
+            append('luckyBox show requested');
+            showLuckyBox();
+          }}
+        >
+          <Text style={styles.buttonText}>Open LuckyBox</Text>
+        </Pressable>
       </View>
 
       <Text style={styles.heading}>Event log</Text>

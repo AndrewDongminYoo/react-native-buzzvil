@@ -27,3 +27,7 @@ export function isLoggedIn(): Promise<boolean> {
 export function showBenefitHub(_options: BenefitHubOptions = {}): void {
   throw new Error(UNSUPPORTED);
 }
+
+export function showLuckyBox(): void {
+  throw new Error(UNSUPPORTED);
+}

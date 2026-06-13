@@ -22,12 +22,31 @@ export interface BuzzvilUser {
  */
 export type InterstitialType = 'dialog' | 'bottomSheet';
 
+/**
+ * Named BenefitHub pages. Pass via `BenefitHubOptions.page` or use the
+ * corresponding convenience function (`showLuckyBox()`).
+ *
+ * - `'luckyBox'`    → `BuzzBenefitHubPage.LUCKY_BOX` (Android) / `.luckyBox` (iOS)
+ * - `'missionPack'` → `BuzzBenefitHubPage.MISSION_PACK` / `.missionPack`
+ * - `'history'`     → `BuzzBenefitHubPage.HISTORY` / `.history`
+ *   (equivalent to `showHistory: true`)
+ */
+export type BenefitHubPage = 'luckyBox' | 'missionPack' | 'history';
+
 /** Options for presenting the BenefitHub (offerwall). */
 export interface BenefitHubOptions {
   /** BenefitHub page number from the Buzzvil admin (advanced routing). */
   routePath?: string;
-  /** Open directly on the history/earnings page instead of the default hub. */
+  /**
+   * Open directly on the history/earnings page. Equivalent to the newer
+   * `page: 'history'`.
+   */
   showHistory?: boolean;
+  /**
+   * Open directly on a named BenefitHub page. Takes precedence over
+   * `routePath` and `showHistory` when provided.
+   */
+  page?: BenefitHubPage;
 }
 
 /** Supported Native-ad layout sizes (width x height in dp). */

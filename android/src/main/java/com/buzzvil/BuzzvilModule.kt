@@ -85,18 +85,25 @@ class BuzzvilModule(
   override fun showBenefitHub(
     routePath: String,
     showHistory: Boolean,
+    page: String,
   ) {
     // BenefitHub launches an Activity — must run on the main thread (parity
     // with the iOS dispatch_async(main) path).
     UiThreadUtil.runOnUiThread {
       val activity = currentActivity ?: return@runOnUiThread
       val configBuilder = BuzzBenefitHubConfig.Builder()
-      if (routePath.isNotEmpty()) {
-        configBuilder.routePath(routePath)
+      when (page) {
+        "luckyBox" -> configBuilder.routePath(BuzzBenefitHubPage.LUCKY_BOX.toRoutePath())
+        "missionPack" -> configBuilder.routePath(BuzzBenefitHubPage.MISSION_PACK.toRoutePath())
+        "history" -> configBuilder.queryParams(BuzzBenefitHubPage.HISTORY.toRedirectQueryParams())
+        else -> {
+          if (routePath.isNotEmpty()) configBuilder.routePath(routePath)
+          if (showHistory) configBuilder.queryParams(BuzzBenefitHubPage.HISTORY.toRedirectQueryParams())
+        }
       }
-      if (showHistory) {
-        configBuilder.queryParams(BuzzBenefitHubPage.HISTORY.toRedirectQueryParams())
-      }
+      // An empty (default-built) config is equivalent to passing no config —
+      // parity with the iOS `needsConfig` guard, which skips setConfig on the
+      // all-sentinel path.
       BuzzBenefitHub.show(activity, configBuilder.build())
     }
   }

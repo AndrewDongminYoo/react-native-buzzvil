@@ -4,8 +4,14 @@ export {
   logout,
   isLoggedIn,
   showBenefitHub,
+  showLuckyBox,
 } from './buzzvil';
-export type { BuzzvilUser, BuzzvilGender, BenefitHubOptions } from './types';
+export type {
+  BuzzvilUser,
+  BuzzvilGender,
+  BenefitHubOptions,
+  BenefitHubPage,
+} from './types';
 export { BuzzvilNativeAdView } from './BuzzvilNativeAdView';
 export type { BuzzvilNativeAdLayout, BuzzvilNativeAdViewProps } from './types';
 export { BuzzBanner } from './BuzzBanner';

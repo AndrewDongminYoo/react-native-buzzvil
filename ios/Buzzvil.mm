@@ -108,7 +108,7 @@
   resolve(@([[BuzzBenefit sharedInstance] isLoggedIn]));
 }
 
-- (void)showBenefitHub:(NSString *)routePath showHistory:(BOOL)showHistory
+- (void)showBenefitHub:(NSString *)routePath showHistory:(BOOL)showHistory page:(NSString *)page
 {
   // BenefitHub presentation is UI work — must run on the main thread.
   dispatch_async(dispatch_get_main_queue(), ^{
@@ -119,13 +119,22 @@
 
     BuzzBenefitHub *hub = [BuzzBenefitHub new];
 
-    if (routePath.length > 0 || showHistory) {
+    BOOL needsConfig = (page.length > 0 || routePath.length > 0 || showHistory);
+    if (needsConfig) {
       BuzzBenefitHubConfig *config = [BuzzBenefitHubConfig configWith:^(BuzzBenefitHubConfigBuilder *builder) {
-        if (routePath.length > 0) {
-          builder.routePath = routePath;
-        }
-        if (showHistory) {
+        if ([page isEqualToString:@"luckyBox"]) {
+          builder.routePath = [[BuzzBenefitHubPage luckyBox] toRoutePath];
+        } else if ([page isEqualToString:@"missionPack"]) {
+          builder.routePath = [[BuzzBenefitHubPage missionPack] toRoutePath];
+        } else if ([page isEqualToString:@"history"]) {
           builder.queryParams = [[BuzzBenefitHubPage history] toRedirectQueryParams];
+        } else {
+          if (routePath.length > 0) {
+            builder.routePath = routePath;
+          }
+          if (showHistory) {
+            builder.queryParams = [[BuzzBenefitHubPage history] toRedirectQueryParams];
+          }
         }
       }];
       [hub setConfig:config];

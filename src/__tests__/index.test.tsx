@@ -40,6 +40,7 @@ import {
   logout,
   isLoggedIn,
   showBenefitHub,
+  showLuckyBox,
   userIdWarnings,
 } from '../buzzvil.native';
 import {
@@ -91,12 +92,36 @@ describe('buzzvil native wrapper — sentinel mapping', () => {
 
   it('defaults BenefitHub options to sentinels', () => {
     showBenefitHub();
-    expect(native.showBenefitHub).toHaveBeenCalledWith('', false);
+    expect(native.showBenefitHub).toHaveBeenCalledWith('', false, '');
   });
 
-  it('maps showHistory and routePath', () => {
+  it('maps showHistory and routePath (legacy)', () => {
     showBenefitHub({ routePath: '0', showHistory: true });
-    expect(native.showBenefitHub).toHaveBeenCalledWith('0', true);
+    expect(native.showBenefitHub).toHaveBeenCalledWith('0', true, '');
+  });
+
+  it('passes page:luckyBox as the third sentinel', () => {
+    showBenefitHub({ page: 'luckyBox' });
+    expect(native.showBenefitHub).toHaveBeenCalledWith('', false, 'luckyBox');
+  });
+
+  it('showLuckyBox() is a shorthand for page:luckyBox', () => {
+    showLuckyBox();
+    expect(native.showBenefitHub).toHaveBeenCalledWith('', false, 'luckyBox');
+  });
+
+  it('passes page:missionPack as the third sentinel', () => {
+    showBenefitHub({ page: 'missionPack' });
+    expect(native.showBenefitHub).toHaveBeenCalledWith(
+      '',
+      false,
+      'missionPack'
+    );
+  });
+
+  it('passes page:history as the third sentinel', () => {
+    showBenefitHub({ page: 'history' });
+    expect(native.showBenefitHub).toHaveBeenCalledWith('', false, 'history');
   });
 });
 
