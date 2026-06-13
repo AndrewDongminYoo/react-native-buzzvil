@@ -191,7 +191,70 @@ emitOnInterstitialClosed(ReadableMap value)` — `loadInterstitial`/`showInterst
 the generated `onInterstitialClosed` member (shape `(handler) =>
 EventSubscription`) and filters by `event.unitId`.
 
+## BuzzBanner (Fabric component `BuzzBannerView`)
+
+Implemented as a Fabric (New Architecture) view component (like the native ad,
+not a TurboModule method). The TS spec is `src/BuzzBannerViewNativeComponent.ts`;
+the friendly wrapper is `src/BuzzBanner.native.tsx` (web fallback:
+`src/BuzzBanner.tsx`), re-exported from `src/index.tsx`. **Implemented** (spec +
+JS wrapper + native impls).
+
+### JS API (`src/BuzzBanner.native.tsx`)
+
+```tsx
+<BuzzBanner placementId size onLoaded onFailed onClicked />
+```
+
+| Prop          | Type                             | Notes                                                           |
+| ------------- | -------------------------------- | --------------------------------------------------------------- |
+| `placementId` | `string`                         | BuzzBanner placement id from the Buzzvil admin. Required.       |
+| `size`        | `BannerSize`                     | `'W320XH50'` (320 × 50) or `'W320XH100'` (320 × 100). Required. |
+| `onLoaded`    | `() => void`                     | Fires when the banner ad loads.                                 |
+| `onFailed`    | `(e: { code; message }) => void` | Load failure; payload already unwrapped from `nativeEvent`.     |
+| `onClicked`   | `() => void`                     | Fires on banner tap.                                            |
+
+- `type BannerSize = 'W320XH50' \| 'W320XH100'`. The SDK's `DYNAMIC` size is
+  **deferred** (not exposed).
+- Like the native ad, under Fabric the host frame comes from the JS shadow node
+  (`style`). Give the banner an explicit width/height matching the `size`
+  (320 × 50 / 320 × 100), or iOS bounds stay `0` and the ad never loads.
+- `onFailed.code` is the SDK's **numeric** error code rendered as a string
+  (distinct from the native ad's symbolic codes).
+
+### Native mapping
+
+| Bridge member (`Spec`)                | Android (`com.buzzvil.buzzbanner`)                                                       | iOS (`BuzzBannerView`)                                                      |
+| ------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `placementId` + `size`                | `BuzzBannerConfig(placementId, BuzzBanner.BannerSize)` → `BuzzBannerView`                | `BuzzBannerView` via `setConfigWithRootViewController:config:`              |
+| load                                  | driven by the Activity lifecycle (`onResume()`), wired via `LifecycleEventListener`      | `requestAd`                                                                 |
+| unload / teardown                     | `onDestroy()` + unregister the `LifecycleEventListener` on drop                          | `removeAd`                                                                  |
+| `onLoaded` / `onFailed` / `onClicked` | `BuzzBannerViewListener` (`onLoaded` / `onFailed(AdError)` → code/message / `onClicked`) | `BuzzBannerViewDelegate` (`didLoad` / `didFail` / `didClick` / `didRemove`) |
+
+- **Android:** hosts `com.buzzvil.buzzbanner.BuzzBannerView`, configured with
+  `BuzzBannerConfig` (placement id + `BuzzBanner.BannerSize`) and a
+  `BuzzBannerViewListener`. The **load is driven by the Activity lifecycle**:
+  the view loads on `onResume()`, wired through a `LifecycleEventListener` (with
+  an explicit resume kick at mount so the first load fires); `onDestroy()` tears
+  it down and the listener is unregistered when the view is dropped.
+- **iOS:** hosts `BuzzBannerView`, configured via
+  `setConfigWithRootViewController:config:` then `requestAd` (and `removeAd` on
+  teardown), with a `BuzzBannerViewDelegate` (`didLoad` / `didFail` / `didClick`
+  / `didRemove`).
+
+### Init asymmetry (important)
+
+BuzzBanner has a platform-specific init requirement:
+
+- **Android** BuzzBanner needs `BuzzBanner().init(appId, appSecret, context)`,
+  wired through the `appSecret` arg now accepted by `initialize(appId, appSecret)`.
+- **iOS** needs **no** separate banner init — the standard
+  `BuzzBenefit.shared.initialize(...)` is sufficient.
+
+So `appSecret` is required **only** for BuzzBanner on Android; it is optional
+(sentinel `''`) for every other surface.
+
 ## Deferred (not in v1)
 
-BuzzBanner, FlexAd, Pop/EntryPoint, LuckyBox, UI configuration.
-Add to the spec per the PRD. (Native ads + Interstitial are implemented — see above.)
+FlexAd, Pop/EntryPoint, LuckyBox, UI configuration.
+Add to the spec per the PRD. (Native ads + Interstitial + BuzzBanner are
+implemented — see above.)
