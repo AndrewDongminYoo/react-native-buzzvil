@@ -15,50 +15,51 @@ Let a React Native app integrate Buzzvil's various ad formats, not just the Bene
 
 ## Scope
 
+**Already shipped (v1 — sets the embedded-view precedent):**
+
+- **Native** (in-feed) — `BuzzvilNativeAdView` Fabric component (see `docs/plans/2026-06-12-buzzvil-native-ad-fabric-component.md`). M1's Fabric work mirrors this component.
+
 **Milestone 1 (fully specified here):**
 
 - **Interstitial** — establishes the imperative-with-events pattern.
-- **BuzzBanner** — establishes the embedded-view (Fabric Native Component) pattern.
+- **BuzzBanner** — second per-format Fabric component, modelled on `BuzzvilNativeAdView`.
 
 **Deferred — architecture TBD pending per-format doc verification:**
 
-- **Native** — embedded in-feed view; expected to follow the BuzzBanner Fabric pattern, but its load/bind API and reward callbacks are unverified.
 - **FlexAd** — the v6 intro does not specify whether it is a view or imperative. Do **not** assume Fabric until verified.
 - **EntryPoint (팝)** — the Android intro describes an "imperative FAB navigation" widget; it may be imperative rather than an embedded view. Verify before classifying.
 
 Each deferred format gets its own doc-verification → spec → implementation pass.
 
-## Starting point (already scaffolded)
+## Starting point (already implemented)
 
-The `create-react-native-library` **fabric-view** generator has been run, which gives us the view-component infrastructure for free:
+- The `create-react-native-library` **fabric-view** scaffold was generated and adapted into `BuzzvilNativeAdView`: `src/BuzzvilNativeAdViewNativeComponent.ts`, `src/BuzzvilNativeAdView.{tsx,native.tsx}`, `android/.../BuzzvilNativeAdView.kt` + `BuzzvilNativeAdViewManager.kt` (registered in `BuzzvilPackage.kt` via `createViewManagers`), `ios/BuzzvilNativeAdView.{h,mm}`.
+- `package.json` → `codegenConfig.type` is `"all"` with `ios.components.BuzzvilNativeAdView`; Java compat at 17.
 
-- A generic `BuzzvilView` Fabric component scaffold (placeholder `color` prop): `src/BuzzvilViewNativeComponent.ts`, `src/BuzzvilView.{tsx,native.tsx}`, `android/.../BuzzvilView.kt` + `BuzzvilViewManager.kt` (registered in `BuzzvilPackage.kt` via `createViewManagers`), `ios/BuzzvilView.{h,mm}`.
-- `package.json` → `codegenConfig.type` is already `"all"` (+ `ios.components` entry), Java compat bumped to 17, dev-dependency bumps.
-
-M1 **adapts/renames this generic scaffold into `BuzzBannerView`** rather than generating a second component — see Decision 4. The scaffold's `color` prop is a placeholder and is removed.
+M1 **adds a new `BuzzBannerView` component alongside `BuzzvilNativeAdView`** (per Decision 4 — per-format components, not a generic view switched by a `format` prop).
 
 ## Architecture — two bridge categories
 
 The RN New Architecture splits cleanly along the SDK's own shape:
 
-| Category                      | Mechanism                                     | Formats                                     |
-| ----------------------------- | --------------------------------------------- | ------------------------------------------- |
-| Imperative (methods + events) | existing `Buzzvil` **TurboModule** (extended) | Interstitial (later: EntryPoint imperative) |
-| Embedded view                 | **Fabric Native Component** (new)             | BuzzBanner (later: Native, possibly FlexAd) |
+| Category                      | Mechanism                                     | Formats                                                  |
+| ----------------------------- | --------------------------------------------- | -------------------------------------------------------- |
+| Imperative (methods + events) | existing `Buzzvil` **TurboModule** (extended) | Interstitial (later: EntryPoint imperative)              |
+| Embedded view                 | **Fabric Native Component** (per format)      | Native (`BuzzvilNativeAdView`, shipped), BuzzBanner (M1) |
 
-The view category is a new layer this package does not yet have:
+The view category was introduced by `BuzzvilNativeAdView`; each new per-format component repeats this shape:
 
 - A codegen view spec in a `*NativeComponent.ts` file using `codegenNativeComponent('<NativeName>')`, name matching the native view manager (extends the codegen-naming discipline in `CLAUDE.md`).
-- Android: a Fabric `BuzzBannerViewManager`, registered in `BuzzvilPackage.kt` via `createViewManagers`.
+- Android: a Fabric ViewManager (e.g. `BuzzBannerViewManager`), registered in `BuzzvilPackage.kt` via `createViewManagers`.
 - iOS: an `RCTViewComponentView` subclass hosting the native ad view.
-- `package.json` → `codegenConfig.type` is **`"all"`** (already set by the scaffold) so codegen emits both TurboModule and component interfaces.
+- `package.json` → `codegenConfig.type` stays `"all"` and each component gets its own entry under `ios.components`.
 
 ## Decisions (approved)
 
 1. **Interstitial instance management.** The native side holds each `BuzzInterstitial` instance in a **map keyed by `unitId`**. `load(unitId, type)` creates/loads the instance; `show(unitId)` presents the stored instance. Chosen over returning an opaque handle to JS: simpler, and matches the common one-interstitial-per-placement usage.
 2. **Module composition.** Imperative methods stay in the **single `Buzzvil` TurboModule** (session + interstitial). View formats are separate per-format Fabric components. Does not multiply native modules.
 3. **Banner sizing (M1).** **Fixed sizes only** (`W320XH50`, `W320XH100`); JS sets explicit `width`/`height`. `DYNAMIC` is deferred — when added, the native side emits the resolved size in the `onLoaded` event and JS sizes the container (avoids C++ shadow-node measurement).
-4. **Component naming.** Rename the generic `BuzzvilView` scaffold to a per-format **`BuzzBannerView`** (native name + ViewManager + spec file + `codegenConfig.ios.components` key + index export), rather than keeping one generic view switched by a `format` prop. Per-format components keep each format's props/events isolated and typed; later formats (Native, possibly FlexAd) add their own components.
+4. **Component naming.** Per-format Fabric components (`BuzzvilNativeAdView` shipped, **`BuzzBannerView`** added in M1) rather than one generic view switched by a `format` prop. Each component has its own native name + ViewManager + spec file + `codegenConfig.ios.components` key + index export, so each format's props/events stay isolated and typed; FlexAd (if Fabric) adds its own component.
 
 ## Public JS API (M1)
 
@@ -97,20 +98,23 @@ readonly onInterstitialClosed: EventEmitter<{ unitId: string }>;
 ### Fabric component spec (`src/BuzzBannerNativeComponent.ts`)
 
 ```ts
-import codegenNativeComponent from 'react-native/Libraries/Utilities/codegenNativeComponent';
-import type { ViewProps } from 'react-native';
-import type { DirectEventHandler } from 'react-native/Libraries/Types/CodegenTypes';
+import { codegenNativeComponent, type ViewProps } from 'react-native';
+import type { CodegenTypes } from 'react-native';
 
 interface NativeProps extends ViewProps {
   placementId: string;
   size: string; // 'W320XH50' | 'W320XH100'
-  onLoaded?: DirectEventHandler<null>;
-  onFailed?: DirectEventHandler<Readonly<{ code: string; message: string }>>;
-  onClicked?: DirectEventHandler<null>;
+  onLoaded?: CodegenTypes.DirectEventHandler<Readonly<{}>>;
+  onFailed?: CodegenTypes.DirectEventHandler<
+    Readonly<{ code: string; message: string }>
+  >;
+  onClicked?: CodegenTypes.DirectEventHandler<Readonly<{}>>;
 }
 
 export default codegenNativeComponent<NativeProps>('BuzzBannerView');
 ```
+
+(Matches the import + no-payload event-type convention already used by `src/BuzzvilNativeAdViewNativeComponent.ts`.)
 
 ## Event surface
 
@@ -121,7 +125,7 @@ Full lifecycle exposure means **only what each non-rewarded format actually emit
 | Interstitial | `load` Promise resolve / reject, `onInterstitialClosed` event | `onAdLoaded` / `BuzzInterstitialDidLoadAd`; `onAdLoadFailed` / `DidFail(toLoadAd:withError:)`; `onAdClosed` / `BuzzInterstitialDidDismiss`       |
 | BuzzBanner   | `onLoaded`, `onFailed`, `onClicked` props                     | `onLoaded` / `bannerView(_:didLoadApid:)`; `onFailed(AdError)` / `didFailApid:error:`; `onClicked` / `didClickApid:` (iOS also `didRemoveApid:`) |
 
-Reward events live in the BenefitHub / Native offerwall surfaces only; revisit when Native is specified.
+Reward events live on the shipped `BuzzvilNativeAdView` (`onRewarded`) and the BenefitHub surface; Interstitial and BuzzBanner are non-rewarded formats.
 
 ## Native implementation notes
 
@@ -139,16 +143,19 @@ Reward events live in the BenefitHub / Native offerwall surfaces only; revisit w
 
 ```log
 src/
-  NativeBuzzvil.ts              # TurboModule spec (session + interstitial + events)
-  BuzzBannerNativeComponent.ts  # Fabric view spec
-  types.ts                      # shared friendly types
-  index.tsx                     # public exports
-  buzzvil.native.tsx / .tsx     # existing session + BenefitHub (unchanged — no rename)
-  interstitial.native.tsx / interstitial.tsx
-  BuzzBanner.tsx / BuzzBanner.web.tsx
+  NativeBuzzvil.ts                        # TurboModule spec (session + interstitial + events)
+  BuzzvilNativeAdViewNativeComponent.ts   # existing — Native ad Fabric spec
+  BuzzBannerNativeComponent.ts            # NEW (M1) — BuzzBanner Fabric spec
+  types.ts                                # shared friendly types
+  layout.ts                               # existing — Native ad layout/size helpers
+  index.tsx                               # public exports
+  buzzvil.native.tsx / .tsx               # existing — session + BenefitHub
+  BuzzvilNativeAdView.native.tsx / .tsx   # existing — Native ad JS wrapper
+  interstitial.native.tsx / .tsx          # NEW (M1)
+  BuzzBanner.tsx / BuzzBanner.web.tsx     # NEW (M1)
 ```
 
-Existing `buzzvil.*` stays as the session/hub module; broad renaming is out of scope.
+Existing `buzzvil.*` and `BuzzvilNativeAdView*` files stay as-is; broad renaming is out of scope.
 
 ## Verification
 
@@ -159,6 +166,5 @@ Existing `buzzvil.*` stays as the session/hub module; broad renaming is out of s
 ## Open questions
 
 1. **FlexAd / EntryPoint classification** — verify against their doc pages before adding to the contract (see Scope).
-2. **Native reward model** — Native ads may carry rewards; the reward-event surface is defined when Native is specified, not now.
-3. **`DYNAMIC` banner sizing** — deferred; resolved-size-in-`onLoaded` approach noted above.
-4. **Buzzvil unit/placement IDs** — needed from the app owner for device testing.
+2. **`DYNAMIC` banner sizing** — deferred; resolved-size-in-`onLoaded` approach noted above.
+3. **Buzzvil unit/placement IDs** — needed from the app owner for device testing.
