@@ -144,6 +144,71 @@
   });
 }
 
+#pragma mark - EntryPoint
+
+// EntryPoint needs no explicit init: `BuzzEntryPoint.shared` is ready after the
+// SDK `initialize` (parity with Android, where BuzzvilSdk.initialize wires the
+// internal BuzzEntryPoint.init).
+- (void)loadEntryPoints:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  [[BuzzEntryPoint shared]
+      loadOnSuccess:^(NSArray<NSNumber *> *types) {
+        // The @objc load returns raw enum values. Map by iOS's own ordering
+        // (fab=0, popup=1, bottomSheet=2, banner=3, custom=4) to the canonical
+        // string names — never compare these ordinals with Android's enum,
+        // whose ordering differs. See NativeBuzzvil.ts.
+        NSMutableArray<NSString *> *names = [NSMutableArray array];
+        for (NSNumber *type in types) {
+          switch (type.integerValue) {
+            case 0:
+              [names addObject:@"fab"];
+              break;
+            case 1:
+              [names addObject:@"popup"];
+              break;
+            case 2:
+              [names addObject:@"bottomSheet"];
+              break;
+            case 3:
+              [names addObject:@"banner"];
+              break;
+            case 4:
+              [names addObject:@"custom"];
+              break;
+            default:
+              break;
+          }
+        }
+        resolve(names);
+      }
+      onFailure:^(NSError *error) {
+        reject([NSString stringWithFormat:@"%ld", (long)error.code],
+               error.localizedDescription ?: error.domain, error);
+      }];
+}
+
+- (void)showEntryPointPopup
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    UIViewController *presenter = RCTPresentedViewController();
+    if (presenter == nil) {
+      return;
+    }
+    [[BuzzEntryPoint shared] showPopupOn:presenter];
+  });
+}
+
+- (void)showEntryPointBottomSheet
+{
+  dispatch_async(dispatch_get_main_queue(), ^{
+    UIViewController *presenter = RCTPresentedViewController();
+    if (presenter == nil) {
+      return;
+    }
+    [[BuzzEntryPoint shared] showBottomSheetOn:presenter];
+  });
+}
+
 #pragma mark - Interstitial
 
 - (void)loadInterstitial:(NSString *)unitId
