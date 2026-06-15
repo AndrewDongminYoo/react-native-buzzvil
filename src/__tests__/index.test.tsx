@@ -21,6 +21,8 @@ jest.mock('../NativeBuzzvil', () => ({
     loadEntryPoints: jest.fn(() => Promise.resolve(['popup', 'bottomSheet'])),
     showEntryPointPopup: jest.fn(),
     showEntryPointBottomSheet: jest.fn(),
+    loadPrivacyConsentStatus: jest.fn(() => Promise.resolve(true)),
+    grantPrivacyConsent: jest.fn(() => Promise.resolve()),
     loadInterstitial: jest.fn(() => Promise.resolve()),
     showInterstitial: jest.fn(),
     onInterstitialClosed: jest.fn(
@@ -47,6 +49,8 @@ import {
   loadEntryPoints,
   showEntryPointPopup,
   showEntryPointBottomSheet,
+  loadPrivacyConsentStatus,
+  grantPrivacyConsent,
   userIdWarnings,
 } from '../buzzvil.native';
 import {
@@ -145,6 +149,18 @@ describe('entry point wrapper', () => {
   it('forwards showEntryPointBottomSheet verbatim', () => {
     showEntryPointBottomSheet();
     expect(native.showEntryPointBottomSheet).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('privacy consent wrapper', () => {
+  it('resolves loadPrivacyConsentStatus with the boolean status', async () => {
+    await expect(loadPrivacyConsentStatus()).resolves.toBe(true);
+    expect(native.loadPrivacyConsentStatus).toHaveBeenCalledTimes(1);
+  });
+
+  it('forwards grantPrivacyConsent verbatim', async () => {
+    await expect(grantPrivacyConsent()).resolves.toBeUndefined();
+    expect(native.grantPrivacyConsent).toHaveBeenCalledTimes(1);
   });
 });
 

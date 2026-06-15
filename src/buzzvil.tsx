@@ -43,3 +43,11 @@ export function showEntryPointPopup(): void {
 export function showEntryPointBottomSheet(): void {
   throw new Error(UNSUPPORTED);
 }
+
+export function loadPrivacyConsentStatus(): Promise<boolean> {
+  return Promise.reject(new Error(UNSUPPORTED));
+}
+
+export function grantPrivacyConsent(): Promise<void> {
+  return Promise.reject(new Error(UNSUPPORTED));
+}

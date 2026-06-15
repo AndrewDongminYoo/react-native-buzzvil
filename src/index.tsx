@@ -8,6 +8,8 @@ export {
   loadEntryPoints,
   showEntryPointPopup,
   showEntryPointBottomSheet,
+  loadPrivacyConsentStatus,
+  grantPrivacyConsent,
 } from './buzzvil';
 export type {
   BuzzvilUser,
