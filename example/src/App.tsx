@@ -5,9 +5,11 @@ import {
   BuzzFlexAd,
   BuzzvilNativeAdView,
   addInterstitialClosedListener,
+  grantPrivacyConsent,
   initialize,
   loadEntryPoints,
   loadInterstitial,
+  loadPrivacyConsentStatus,
   login,
   showEntryPointBottomSheet,
   showEntryPointPopup,
@@ -275,6 +277,35 @@ export default function App() {
             }}
           >
             <Text style={styles.buttonText}>BottomSheet</Text>
+          </Pressable>
+        </View>
+      </Section>
+
+      <Section title="Privacy consent — smoke test">
+        <View style={styles.buttonRow}>
+          <Pressable
+            style={styles.button}
+            onPress={() =>
+              loadPrivacyConsentStatus()
+                .then((granted) => append(`privacy consent status: ${granted}`))
+                .catch((e: unknown) =>
+                  append(`privacy consent load failed: ${String(e)}`)
+                )
+            }
+          >
+            <Text style={styles.buttonText}>Load Status</Text>
+          </Pressable>
+          <Pressable
+            style={styles.button}
+            onPress={() =>
+              grantPrivacyConsent()
+                .then(() => append('privacy consent granted'))
+                .catch((e: unknown) =>
+                  append(`privacy consent grant failed: ${String(e)}`)
+                )
+            }
+          >
+            <Text style={styles.buttonText}>Grant</Text>
           </Pressable>
         </View>
       </Section>

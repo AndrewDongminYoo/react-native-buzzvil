@@ -24,6 +24,8 @@ LuckyBox is accessible via `showLuckyBox()` (no new native code; routes through 
 | `loadEntryPoints(): Promise<string[]>`      | `BuzzEntryPoint.load(onSuccess, onFailure)`                                                                   | `BuzzEntryPoint.shared.load(onSuccess:onFailure:)`                                                |
 | `showEntryPointPopup()`                     | `BuzzEntryPoint.showPopup(currentActivity)`                                                                   | `BuzzEntryPoint.shared.showPopup(on: currentViewController)`                                       |
 | `showEntryPointBottomSheet()`               | `BuzzEntryPoint.showBottomSheet(currentActivity)`                                                             | `BuzzEntryPoint.shared.showBottomSheet(on: currentViewController)`                                 |
+| `loadPrivacyConsentStatus(): Promise<boolean>` | `BuzzBenefit.privacyPolicyManager?.isConsentGrantedAsyncForJava { … }`                                     | `BuzzAdBenefit.shared.loadPrivacyConsentStatus(onSuccess:onFailure:)`                              |
+| `grantPrivacyConsent(): Promise<void>`      | `BuzzBenefit.privacyPolicyManager?.grantConsentAsyncForJava { … }`                                            | `BuzzAdBenefit.shared.grantPrivacyConsent(onSuccess:onFailure:)`                                   |
 
 ## Sentinel contract (no optionals in codegen)
 
@@ -63,6 +65,23 @@ The flow is `loadEntryPoints()` (async; resolves with the available type names) 
 - Scope: only `popup` and `bottomSheet` are exposed today (both need just the presenting context, so they fit the TurboModule cleanly).
   `fab` (Android needs a `ViewGroup` container — platform-asymmetric), `banner` (needs a Fabric view component), and `custom` are recognized in `EntryPointType` but not yet presentable; add them as follow-ups.
 - Deep-link routing on tap (`setDeepLinkHandler`) is **not** wired in this baseline — the entry point renders, but tapping through may not navigate until a handler is added.
+
+## Privacy consent (imperative)
+
+Third-party data-provision consent. `loadPrivacyConsentStatus()` returns whether
+consent is granted; `grantPrivacyConsent()` records consent collected through your own
+UI (so BenefitHub entry doesn't re-prompt and ad allocation proceeds). Relevant because
+`BuzzErrorCode.privacyPolicyNotGranted` can otherwise block ads.
+
+- The two platforms expose this through **different classes / shapes**, normalized in the
+  wrapper:
+  - iOS: `BuzzAdBenefit.shared` (BuzzAdBenefitSDK — distinct from the `BuzzBenefit`
+    session class) with callback APIs; status enum `granted`/`revoked` → `boolean`.
+  - Android: `BuzzBenefit.privacyPolicyManager` (**nullable** until SDK init) with the
+    SDK's `*AsyncForJava` callback variants (a `Pair<value, Throwable?>` — no coroutines).
+    A `null` manager rejects with `buzzvil_privacy_consent_*_failed`.
+- **No cross-platform `revoke`**: iOS exposes no public revoke API (Android has one), so
+  only `load` + `grant` are bridged — matching the FAB/banner asymmetry policy.
 
 ## Native ad (Fabric component `BuzzvilNativeAdView`)
 
@@ -276,8 +295,23 @@ The TS spec is `src/BuzzFlexAdViewNativeComponent.ts`; the friendly wrapper is `
   This is the only Swift file in the pod; `Buzzvil.podspec` sets `s.swift_version`.
 - Both platforms' Fabric class is named `BuzzFlexAdView`, which collides with the SDK's own view class of the same name on each platform — isolated via `ios/BuzzFlexAdHost.{h,mm}` (Obj-C++) / a Kotlin import alias (`BuzzFlexAdView as SdkBuzzFlexAdView`), mirroring `BuzzBannerAdHost`.
 
-## Deferred (not in v1)
+## Deferred / not feasible
 
-EntryPoint FAB / Banner / custom types, deep-link routing, UI configuration.
-Add to the spec per the PRD.
-(Native ads + Interstitial + BuzzBanner + FlexAd are implemented; LuckyBox is reachable via `showLuckyBox()`; EntryPoint popup / bottomSheet are implemented — see above.)
+Implemented: Native ads, Interstitial, BuzzBanner, FlexAd, LuckyBox (`showLuckyBox()`),
+EntryPoint popup / bottomSheet, Privacy consent (load / grant).
+
+Remaining, with status after SDK investigation:
+
+- **EntryPoint FAB / Banner / custom + deep-link routing** — paused (out of the client's
+  current Buzzvil contract; `loadEntryPoints()` returns empty until activated). Feasible;
+  sample app `Buzzvil/buzz-sdk-samples` shows all types. FAB is fully imperative (Android
+  container = activity root view); Banner is a self-sizing Fabric view.
+- **BuzzBanner `DYNAMIC` size** — feasible but deferred: needs a self-sizing mechanism
+  (the SDK banner delegate reports no dimensions, and a content-determined height needs a
+  seed + measure-and-emit), and can't be verified without a valid banner placement.
+- **UI configuration (`setTheme` / `BuzzTheme`)** — **not RN-bridgeable**: `BuzzTheme`
+  only exposes `ctaViewClass` (a native CTA view class conforming to `BuzzCtaViewProtocol`),
+  which cannot be supplied from JS.
+- **BenefitHub reward / close events** — **not exposed by the SDK**: `BuzzBenefitHub` has
+  no delegate or completion callback (only `setConfig` / `show`), so there is nothing to
+  bridge.
