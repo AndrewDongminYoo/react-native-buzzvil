@@ -209,6 +209,35 @@
   });
 }
 
+#pragma mark - Privacy consent
+
+// Privacy consent lives on BuzzAdBenefit (BuzzAdBenefitSDK), a different class
+// from the BuzzBenefit (BuzzvilSDK) session API used for init/login. The header
+// is already imported at the top of this file.
+- (void)loadPrivacyConsentStatus:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  [[BuzzAdBenefit sharedInstance]
+      loadPrivacyConsentStatusOnSuccess:^(enum BuzzPrivacyConsentStatus status) {
+        resolve(@(status == BuzzPrivacyConsentStatusGranted));
+      }
+      onFailure:^(NSError *error) {
+        reject(@"buzzvil_privacy_consent_load_failed",
+               error.localizedDescription ?: error.domain, error);
+      }];
+}
+
+- (void)grantPrivacyConsent:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject
+{
+  [[BuzzAdBenefit sharedInstance]
+      grantPrivacyConsentOnSuccess:^{
+        resolve(nil);
+      }
+      onFailure:^(NSError *error) {
+        reject(@"buzzvil_privacy_consent_grant_failed",
+               error.localizedDescription ?: error.domain, error);
+      }];
+}
+
 #pragma mark - Interstitial
 
 - (void)loadInterstitial:(NSString *)unitId

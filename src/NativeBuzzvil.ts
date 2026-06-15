@@ -153,6 +153,31 @@ export interface Spec extends TurboModule {
   showEntryPointBottomSheet(): void;
 
   /**
+   * Load the user's privacy-consent status (third-party data provision consent).
+   * Resolves `true` if granted, `false` if revoked; rejects on SDK failure.
+   *
+   * - iOS: `BuzzAdBenefit.shared.loadPrivacyConsentStatus(...)`
+   *   (`.granted` → `true`, `.revoked` → `false`).
+   * - Android: `BuzzBenefit.privacyPolicyManager?.isConsentGrantedAsyncForJava { … }`.
+   *   The manager is `null` until the SDK is initialized → rejects in that case.
+   */
+  loadPrivacyConsentStatus(): Promise<boolean>;
+
+  /**
+   * Grant the user's privacy consent (e.g. after collecting it through your own
+   * UI), so BenefitHub entry doesn't re-prompt and ad allocation proceeds.
+   * Resolves on success, rejects on SDK failure.
+   *
+   * - iOS: `BuzzAdBenefit.shared.grantPrivacyConsent(...)`.
+   * - Android: `BuzzBenefit.privacyPolicyManager?.grantConsentAsyncForJava { … }`
+   *   (rejects if the manager is `null` — SDK not initialized).
+   *
+   * Note: there is no cross-platform `revoke` (iOS exposes no public revoke API),
+   * so only load + grant are bridged.
+   */
+  grantPrivacyConsent(): Promise<void>;
+
+  /**
    * Fires when an interstitial is dismissed (Android `onAdClosed` / iOS
    * `BuzzInterstitialDidDismiss`). The payload's `unitId` identifies which
    * placement closed; the JS wrapper filters by it so each

@@ -95,3 +95,16 @@ export function showEntryPointPopup(): void {
 export function showEntryPointBottomSheet(): void {
   Buzzvil.showEntryPointBottomSheet();
 }
+
+/**
+ * Load the user's privacy-consent status. Resolves `true` if granted, `false`
+ * if revoked; rejects on SDK failure (or, on Android, if not initialized).
+ */
+export function loadPrivacyConsentStatus(): Promise<boolean> {
+  return Buzzvil.loadPrivacyConsentStatus();
+}
+
+/** Grant the user's privacy consent. Resolves on success, rejects on failure. */
+export function grantPrivacyConsent(): Promise<void> {
+  return Buzzvil.grantPrivacyConsent();
+}
