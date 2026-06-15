@@ -10,6 +10,7 @@ import com.facebook.react.bridge.UiThreadUtil
 // resolved `com.buzzvil:buzzvil-sdk` AAR (buzzvil-bom 6.7.x) — this module
 // compiles cleanly via `:dongminyu_react-native-buzzvil:compileDebugKotlin`.
 import com.buzzvil.buzzbanner.BuzzBanner
+import com.buzzvil.buzzbenefit.BuzzBenefit
 import com.buzzvil.buzzbenefit.BuzzBenefitConfig
 import com.buzzvil.buzzbenefit.benefithub.BuzzBenefitHub
 import com.buzzvil.buzzbenefit.benefithub.BuzzBenefitHubConfig
@@ -153,6 +154,50 @@ class BuzzvilModule(
       BuzzEntryPointType.BANNER -> "banner"
       BuzzEntryPointType.CUSTOM -> "custom"
     }
+
+  // --- Privacy consent ---
+
+  // privacyPolicyManager is null until BuzzvilSdk.initialize has run. Uses the
+  // SDK's `*AsyncForJava` callback variants (a Pair<value, Throwable?>) so no
+  // coroutine plumbing is needed; the callback may fire off the main thread,
+  // which is fine for Promise resolve/reject (no UI work here).
+  override fun loadPrivacyConsentStatus(promise: Promise) {
+    val manager = BuzzBenefit.privacyPolicyManager
+    if (manager == null) {
+      promise.reject("buzzvil_privacy_consent_load_failed", "Buzzvil SDK is not initialized.")
+      return
+    }
+    manager.isConsentGrantedAsyncForJava { result ->
+      val error = result.second
+      if (error != null) {
+        promise.reject(
+          "buzzvil_privacy_consent_load_failed",
+          error.message ?: "Failed to load privacy consent status.",
+        )
+      } else {
+        promise.resolve(result.first)
+      }
+    }
+  }
+
+  override fun grantPrivacyConsent(promise: Promise) {
+    val manager = BuzzBenefit.privacyPolicyManager
+    if (manager == null) {
+      promise.reject("buzzvil_privacy_consent_grant_failed", "Buzzvil SDK is not initialized.")
+      return
+    }
+    manager.grantConsentAsyncForJava { result ->
+      val error = result.second
+      if (error != null) {
+        promise.reject(
+          "buzzvil_privacy_consent_grant_failed",
+          error.message ?: "Failed to grant privacy consent.",
+        )
+      } else {
+        promise.resolve(null)
+      }
+    }
+  }
 
   // --- Interstitial ---
 
