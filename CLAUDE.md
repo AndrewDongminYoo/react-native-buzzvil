@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A React Native (New Architecture) package (`react-native-buzzvil-ad`) that wraps Buzzvil's **BuzzBenefit v6** native SDKs so they can be used from a React Native app:
 
-- Android: https://docs.buzzvil.com/docs/buzzbenefit-android/v6/introduction
-- iOS: https://docs.buzzvil.com/docs/buzzbenefit-ios/v6/introduction
+- Android: <https://docs.buzzvil.com/docs/buzzbenefit-android/v6/introduction>
+- iOS: <https://docs.buzzvil.com/docs/buzzbenefit-ios/v6/introduction>
 
 It exposes **two native surfaces** (see Architecture below):
 
