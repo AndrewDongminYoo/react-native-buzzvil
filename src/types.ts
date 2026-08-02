@@ -56,19 +56,11 @@ export interface BenefitHubOptions {
  * recognized in the type set but not yet exposed as show methods.
  */
 export type EntryPointType =
-  | 'fab'
-  | 'popup'
-  | 'bottomSheet'
-  | 'banner'
-  | 'custom';
+  'fab' | 'popup' | 'bottomSheet' | 'banner' | 'custom';
 
 /** Supported Native-ad layout sizes (width x height in dp). */
 export type BuzzvilNativeAdLayout =
-  | '320x50'
-  | '320x100'
-  | '320x130'
-  | '300x250'
-  | '320x480';
+  '320x50' | '320x100' | '320x130' | '300x250' | '320x480';
 
 /** Supported BuzzBanner sizes. */
 export type BannerSize = 'W320XH50' | 'W320XH100';

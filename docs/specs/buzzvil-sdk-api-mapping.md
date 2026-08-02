@@ -14,30 +14,30 @@ Scope is the **common, foundational** surface only: initialize → login → pre
 Feature-specific inventory (FlexAd, Pop/EntryPoint) is deferred until the PRD defines which are used.
 LuckyBox is accessible via `showLuckyBox()` (no new native code; routes through `showBenefitHub` with `page: 'luckyBox'`).
 
-| Bridge method (`Spec`)                      | Android (`BuzzvilSdk` / `BuzzBenefitHub`)                                                                     | iOS (`BuzzBenefit.shared` / `BuzzBenefitHub`)                                                      |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `initialize(appId)`                         | `BuzzvilSdk.initialize(application, BuzzBenefitConfig.Builder(appId).build())`                                | `BuzzBenefit.shared.initialize(with: BuzzBenefitConfig.Builder(appId:).build())`                   |
-| `login(userId, gender, birthYear): Promise` | `BuzzvilSdk.login(BuzzvilSdkUser(userId, Gender?, birthYear?), BuzzvilSdkLoginListener{onSuccess/onFailure})` | `BuzzBenefit.shared.login(with: BuzzBenefitUser.Builder(userId:)…build(), onSuccess:, onFailure:)` |
-| `logout()`                                  | `BuzzvilSdk.logout()`                                                                                         | `BuzzBenefit.shared.logout()`                                                                      |
-| `isLoggedIn(): Promise<boolean>`            | `BuzzvilSdk.isLoggedIn` (property)                                                                            | `BuzzBenefit.shared.isLoggedIn()`                                                                  |
-| `showBenefitHub(routePath, showHistory, page)` | `BuzzBenefitHub.show(currentActivity, BuzzBenefitHubConfig.Builder()…build())`                              | `BuzzBenefitHub().show(on: currentViewController)` (+ `BuzzBenefitHubConfig.Builder()`)            |
-| `loadEntryPoints(): Promise<string[]>`      | `BuzzEntryPoint.load(onSuccess, onFailure)`                                                                   | `BuzzEntryPoint.shared.load(onSuccess:onFailure:)`                                                |
-| `showEntryPointPopup()`                     | `BuzzEntryPoint.showPopup(currentActivity)`                                                                   | `BuzzEntryPoint.shared.showPopup(on: currentViewController)`                                       |
-| `showEntryPointBottomSheet()`               | `BuzzEntryPoint.showBottomSheet(currentActivity)`                                                             | `BuzzEntryPoint.shared.showBottomSheet(on: currentViewController)`                                 |
-| `loadPrivacyConsentStatus(): Promise<boolean>` | `BuzzBenefit.privacyPolicyManager?.isConsentGrantedAsyncForJava { … }`                                     | `BuzzAdBenefit.shared.loadPrivacyConsentStatus(onSuccess:onFailure:)`                              |
-| `grantPrivacyConsent(): Promise<void>`      | `BuzzBenefit.privacyPolicyManager?.grantConsentAsyncForJava { … }`                                            | `BuzzAdBenefit.shared.grantPrivacyConsent(onSuccess:onFailure:)`                                   |
+| Bridge method (`Spec`)                         | Android (`BuzzvilSdk` / `BuzzBenefitHub`)                                                                     | iOS (`BuzzBenefit.shared` / `BuzzBenefitHub`)                                                      |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `initialize(appId)`                            | `BuzzvilSdk.initialize(application, BuzzBenefitConfig.Builder(appId).build())`                                | `BuzzBenefit.shared.initialize(with: BuzzBenefitConfig.Builder(appId:).build())`                   |
+| `login(userId, gender, birthYear): Promise`    | `BuzzvilSdk.login(BuzzvilSdkUser(userId, Gender?, birthYear?), BuzzvilSdkLoginListener{onSuccess/onFailure})` | `BuzzBenefit.shared.login(with: BuzzBenefitUser.Builder(userId:)…build(), onSuccess:, onFailure:)` |
+| `logout()`                                     | `BuzzvilSdk.logout()`                                                                                         | `BuzzBenefit.shared.logout()`                                                                      |
+| `isLoggedIn(): Promise<boolean>`               | `BuzzvilSdk.isLoggedIn` (property)                                                                            | `BuzzBenefit.shared.isLoggedIn()`                                                                  |
+| `showBenefitHub(routePath, showHistory, page)` | `BuzzBenefitHub.show(currentActivity, BuzzBenefitHubConfig.Builder()…build())`                                | `BuzzBenefitHub().show(on: currentViewController)` (+ `BuzzBenefitHubConfig.Builder()`)            |
+| `loadEntryPoints(): Promise<string[]>`         | `BuzzEntryPoint.load(onSuccess, onFailure)`                                                                   | `BuzzEntryPoint.shared.load(onSuccess:onFailure:)`                                                 |
+| `showEntryPointPopup()`                        | `BuzzEntryPoint.showPopup(currentActivity)`                                                                   | `BuzzEntryPoint.shared.showPopup(on: currentViewController)`                                       |
+| `showEntryPointBottomSheet()`                  | `BuzzEntryPoint.showBottomSheet(currentActivity)`                                                             | `BuzzEntryPoint.shared.showBottomSheet(on: currentViewController)`                                 |
+| `loadPrivacyConsentStatus(): Promise<boolean>` | `BuzzBenefit.privacyPolicyManager?.isConsentGrantedAsyncForJava { … }`                                        | `BuzzAdBenefit.shared.loadPrivacyConsentStatus(onSuccess:onFailure:)`                              |
+| `grantPrivacyConsent(): Promise<void>`         | `BuzzBenefit.privacyPolicyManager?.grantConsentAsyncForJava { … }`                                            | `BuzzAdBenefit.shared.grantPrivacyConsent(onSuccess:onFailure:)`                                   |
 
 ## Sentinel contract (no optionals in codegen)
 
 The spec is primitive-only, so the JS wrapper (`src/buzzvil.native.tsx`) encodes "not provided" as sentinels.
 **Both native impls must interpret these identically:**
 
-| Param         | Sentinel meaning                                                                   |
-| ------------- | ---------------------------------------------------------------------------------- |
-| `gender`      | `'MALE'`/`'FEMALE'`; `''` → pass `null` to the user builder (don't set)            |
-| `birthYear`   | 4-digit year; `0` → pass `null` (don't set)                                        |
-| `routePath`   | admin page number; `''` → no route path (default hub)                              |
-| `showHistory` | `true` → open history page (Android `BuzzBenefitHubPage.HISTORY` / iOS `.history`) |
+| Param         | Sentinel meaning                                                                                                          |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `gender`      | `'MALE'`/`'FEMALE'`; `''` → pass `null` to the user builder (don't set)                                                   |
+| `birthYear`   | 4-digit year; `0` → pass `null` (don't set)                                                                               |
+| `routePath`   | admin page number; `''` → no route path (default hub)                                                                     |
+| `showHistory` | `true` → open history page (Android `BuzzBenefitHubPage.HISTORY` / iOS `.history`)                                        |
 | `page`        | named page; `''` → not set. `'luckyBox'` / `'missionPack'` / `'history'`. Takes precedence over `routePath`/`showHistory` |
 
 ### Named BenefitHub pages (LuckyBox / MissionPack / History)

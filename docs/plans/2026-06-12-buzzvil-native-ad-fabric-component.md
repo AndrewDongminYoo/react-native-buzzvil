@@ -423,11 +423,7 @@ Append:
 
 ```ts
 export type BuzzvilNativeAdLayout =
-  | '320x50'
-  | '320x100'
-  | '320x130'
-  | '300x250'
-  | '320x480';
+  '320x50' | '320x100' | '320x130' | '300x250' | '320x480';
 
 export interface BuzzvilNativeAdViewProps {
   unitId: string;

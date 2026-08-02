@@ -96,9 +96,18 @@ class BuzzvilModule(
       val activity = currentActivity ?: return@runOnUiThread
       val configBuilder = BuzzBenefitHubConfig.Builder()
       when (page) {
-        "luckyBox" -> configBuilder.routePath(BuzzBenefitHubPage.LUCKY_BOX.toRoutePath())
-        "missionPack" -> configBuilder.routePath(BuzzBenefitHubPage.MISSION_PACK.toRoutePath())
-        "history" -> configBuilder.queryParams(BuzzBenefitHubPage.HISTORY.toRedirectQueryParams())
+        "luckyBox" -> {
+          configBuilder.routePath(BuzzBenefitHubPage.LUCKY_BOX.toRoutePath())
+        }
+
+        "missionPack" -> {
+          configBuilder.routePath(BuzzBenefitHubPage.MISSION_PACK.toRoutePath())
+        }
+
+        "history" -> {
+          configBuilder.queryParams(BuzzBenefitHubPage.HISTORY.toRedirectQueryParams())
+        }
+
         else -> {
           if (routePath.isNotEmpty()) configBuilder.routePath(routePath)
           if (showHistory) configBuilder.queryParams(BuzzBenefitHubPage.HISTORY.toRedirectQueryParams())
