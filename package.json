@@ -91,6 +91,7 @@
   },
   "resolutions": {
     "esbuild": "^0.28.1",
+    "nanoid": "^3.3.18",
     "jest": "30.4.1",
     "jest-cli": "30.4.1",
     "@jest/core": "30.4.1",

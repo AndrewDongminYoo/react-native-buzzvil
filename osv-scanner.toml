@@ -13,3 +13,11 @@
 [[IgnoredVulns]]
 id = "GHSA-gh4j-gqv2-49f6"
 reason = "fast-xml-parser@4.5.6 — transitive, dev-only (via @react-native-community/cli-platform-apple / cli-config-android), not shipped. The fix is fast-xml-parser 5.7.0, a breaking major the React Native CLI does not support yet (it requires ^4.4.1); forcing it breaks `react-native config`. Re-evaluate when @react-native-community/cli adopts fast-xml-parser v5. (recorded 2026-06-13)"
+
+[[IgnoredVulns]]
+id = "GHSA-5p2g-fcmc-qvqq"
+reason = "image-size@1.2.1 — transitive, dev-only (via metro), not shipped. No patch available as of 2026-08-20; the advisory covers <= 2.0.2 with no fixed version released. Re-evaluate when image-size publishes a fix."
+
+[[IgnoredVulns]]
+id = "GHSA-w3rx-r6r6-pgpr"
+reason = "image-size@1.2.1 — transitive, dev-only (via metro), not shipped. No patch available as of 2026-08-20; the advisory covers <= 2.0.2 with no fixed version released. Re-evaluate when image-size publishes a fix."
