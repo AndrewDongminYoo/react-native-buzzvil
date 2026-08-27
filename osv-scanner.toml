@@ -9,10 +9,7 @@
 # Patchable advisories are fixed directly instead of ignored:
 #   - joi    GHSA-q7cg-457f-vx79  → bumped to 17.13.4 (Dependabot #2)
 #   - esbuild GHSA-gv7w-rqvm-qjhr / GHSA-g7r4-m6w7-qqqr → resolutions ^0.28.1
-
-[[IgnoredVulns]]
-id = "GHSA-gh4j-gqv2-49f6"
-reason = "fast-xml-parser@4.5.6 — transitive, dev-only (via @react-native-community/cli-platform-apple / cli-config-android), not shipped. The fix is fast-xml-parser 5.7.0, a breaking major the React Native CLI does not support yet (it requires ^4.4.1); forcing it breaks `react-native config`. Re-evaluate when @react-native-community/cli adopts fast-xml-parser v5. (recorded 2026-06-13)"
+#   - fast-xml-parser GHSA-gh4j-gqv2-49f6 → React Native CLI 20.2.0 resolves 5.11.0
 
 [[IgnoredVulns]]
 id = "GHSA-5p2g-fcmc-qvqq"
