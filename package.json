@@ -97,7 +97,8 @@
     "@jest/core": "30.4.1",
     "jest-runtime": "30.4.1",
     "jest-mock": "30.4.1",
-    "jest-environment-node": "30.4.1"
+    "jest-environment-node": "30.4.1",
+    "qs": "^6.16.0"
   },
   "workspaces": [
     "example"
