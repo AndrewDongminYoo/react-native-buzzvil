@@ -21,10 +21,7 @@ jobs:
   guard:
     name: Guard
     runs-on: ubuntu-latest
-    if: >-
-      github.actor != 'dependabot[bot]' &&
-      github.actor != 'renovate[bot]' &&
-      github.actor != 'github-actions[bot]'
+    if: github.actor != 'github-actions[bot]'
     steps:
       - name: Proceed
         env:
