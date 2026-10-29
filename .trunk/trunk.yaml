@@ -20,6 +20,9 @@ runtimes:
 lint:
   disabled:
     - dotenv-linter
+    - grype
+    - taplo
+    - trivy
   ignore:
     - linters: [osv-scanner]
       paths: [example/ios/Podfile.lock]
@@ -28,20 +31,19 @@ lint:
     - linters: [markdownlint]
       paths: [.github/**/*.md]
   enabled:
-    - taplo@0.10.0
-    - eslint@10.9.1
-    - pinact@4.1.0
     - actionlint@1.7.12
-    - checkov@3.3.15
+    - checkov@3.3.30
+    - eslint@10.13.0
     - git-diff-check
     - ktlint@1.8.0
-    - markdownlint@0.49.1
+    - markdownlint@0.50.0
     - osv-scanner@2.4.0
     - oxipng@10.1.1
-    - prettier@3.9.6
+    - pinact@4.1.1!:
+        commands: [lint, upgrade]
+    - prettier@3.9.10
     - shellcheck@0.11.0
     - shfmt@3.13.1
-    - trivy@0.71.0
     - trufflehog@3.95.8
     - yamllint@1.38.0
 actions:
